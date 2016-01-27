@@ -153,12 +153,6 @@ Class Server Implements IOnBindComplete, IOnAcceptComplete Final
 	' Fields (Protected):
 	Protected
 	
-	' This acts as the parent application.
-	Field Parent:ServerApplication
-	
-	' This is the socket we use 
-	Field _Connection:Socket
-	
 	' Meta:
 	Field _Port:Int = PORT_AUTO
 	
