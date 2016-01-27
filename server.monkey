@@ -17,15 +17,15 @@ Public
 Interface ServerApplication
 	' Methods:
 	
-	' The return-value of this methods indicates if the server should start accepting "clients" ('NetHandles').
+	' The return-value of this methods indicates if the server should start accepting "clients" ('NetUserHandles').
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 	
 	' The return-value indicates if more "clients" should be accepted.
-	Method OnServerClientAccepted:Bool(Host:Server) ' ...
+	Method OnServerUserAccepted:Bool(Host:Server) ' ...
 End
 
 ' Classes:
-Class Server Implements IOnBindComplete, IOnAcceptComplete Final
+Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, IOnAcceptComplete Final
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin' using 'Port'.
@@ -68,7 +68,7 @@ Class Server Implements IOnBindComplete, IOnAcceptComplete Final
 	End
 	
 	#Rem
-		This is used to begin accepting "clients" ('NetHandles').
+		This is used to begin accepting "clients" ('NetUserHandles').
 		The return-value of this method indicates if we could start accepting clients again.
 		If we are already accepting "clients", this will return 'False'.
 	#End
@@ -109,8 +109,8 @@ Class Server Implements IOnBindComplete, IOnAcceptComplete Final
 			Return
 		Endif
 		
-		' Ask our parent if we should continue accepting "clients" (If available. - 'NetHandles').
-		If (Parent.OnServerClientAccepted(Self)) Then
+		' Ask our parent if we should continue accepting "clients" (If available. - 'NetUserHandles').
+		If (Parent.OnServerUserAccepted(Self, New NetUserHandle(Source))) Then
 			' Our parent said yes, accept more.
 			AcceptClients()
 		Endif
@@ -120,41 +120,11 @@ Class Server Implements IOnBindComplete, IOnAcceptComplete Final
 	
 	Public
 	
-	' Properties (Public):
-	Method Port:Int() Property
-		Return Self._Port
-	End
-	
-	Method Connection:Socket() Property
-		Return Self._Connection
-	End
-	
-	Method IsOpen:Bool() Property
-		Return (Connection <> Null)
-	End
-	
-	' Properties (Protected):
-	Protected
-	
-	Method Port:Void(Input:Int) Property
-		Self._Port = Input
-		
-		Return
-	End
-	
-	Method Connection:Void(Input:Socket) Property
-		Self._Connection = Input
-		
-		Return
-	End
-	
-	Public
+	' Properties:
+	' Nothing so far.
 	
 	' Fields (Protected):
 	Protected
-	
-	' Meta:
-	Field _Port:Int = PORT_AUTO
 	
 	' Booleans / Flags:
 	Field Accepting:Bool = False

@@ -17,7 +17,7 @@ Import brl.socket
 Public
 
 ' Classes:
-Class NetHandle Final
+Class NetUserHandle Final
 	' Constructor(s):
 	Method New(Connection:Socket)
 		Self.Connection = Connection
