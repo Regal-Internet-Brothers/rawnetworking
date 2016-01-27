@@ -21,33 +21,28 @@ Interface ServerApplication
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 	
 	' The return-value indicates if more "clients" should be accepted.
-	Method OnServerUserAccepted:Bool(Host:Server) ' ...
+	Method OnServerUserAccepted:Bool(Host:Server, User:NetUserHandle)
 End
 
 ' Classes:
-Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, IOnAcceptComplete Final
+Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, IOnAcceptComplete ' Final
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin' using 'Port'.
-	Method New(Parent:ServerApplication, Port:Int)
-		Self.Parent = Parent
+	Method New(Parent:ServerApplication, Port:Int, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(Parent, PacketPoolSize)
 		
 		Begin(Port)
 	End
 	
 	' This overload does not call 'Begin'.
-	Method New(Parent:ServerApplication)
-		Self.Parent = Parent
+	Method New(Parent:ServerApplication, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(Parent, PacketPoolSize)
 	End
 	
 	' Destructor(s):
 	Method Close:Void()
-		' Close our connection.
-		Connection.Close()
-		
-		' Restore default values:
-		Connection = Null
-		Port = PORT_AUTO
+		Super.Close()
 		
 		' Restore the correct flags:
 		Accepting = False
@@ -56,13 +51,16 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	End
 	
 	' Methods (Public):
-	Method Begin:Void(RemotePort:Int)
-		Local S:= New Socket()
-		
-		S.BindAsync("", RemotePort, Self)
-		
-		' Since nothing went wrong initially, set the internal port.
+	Method Begin:Void(RemotePort:Int, Protocol:String="server")
+		' Set the internal port. (Done first for safety)
 		Port = RemotePort
+		
+		' Allocate a 'Socket' using 'Protocol'.
+		Local S:= New Socket(Protocol)
+		
+		' Attempt to bind 'S'. If successful,
+		' 'S' will become 'Connection'.
+		S.BindAsync("", RemotePort, Self)
 		
 		Return
 	End

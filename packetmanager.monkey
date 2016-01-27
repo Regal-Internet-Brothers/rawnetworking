@@ -17,8 +17,13 @@ Public
 ' This handles the storage of 'Packet' objects,
 ' as well as their "transmission states".
 Class PacketManager Extends Pool<Packet> Final
+	' Constant variable(s):
+	
+	' Defaults:
+	Const Defaulk_PacketPoolSize:= 4 ' 8 ' 16
+	
 	' Constructor(s):
-	Method New(Capacity:Int=4)
+	Method New(Capacity:Int=Defaulk_PacketPoolSize)
 		Super.New(Capacity)
 		
 		Construct()

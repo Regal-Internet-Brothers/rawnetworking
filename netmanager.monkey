@@ -14,9 +14,31 @@ Import brl.socket
 Public
 
 ' Classes:
-Class NetManager<ParentType> Abstract
+
+' This class covers common functionality between 'Server' and 'Client'.
+Class NetManager<ParentType> Extends PacketManager Abstract
+	' Constructor(s):
+	
+	' This constructor does not initiate anything.
+	Method New(Parent:ParentType, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(PacketPoolSize)
+		
+		Self.Parent = Parent
+	End
+	
 	' Destructor(s):
-	Method Close:Void() Abstract
+	
+	' Please call-up to this destructor when extending this class.
+	Method Close:Void()
+		' Close our connection.
+		Connection.Close()
+		
+		' Restore default values:
+		Connection = Null
+		Port = PORT_AUTO
+		
+		Return
+	End
 	
 	' Methods:
 	' Nothing so far.

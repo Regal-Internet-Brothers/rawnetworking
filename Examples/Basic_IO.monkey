@@ -11,6 +11,9 @@ Import regal.rawnetworking
 Class Application Extends App Implements IServerApplication Final
 	' Constant variable(s):
 	
+	' This will be the hostname used to connect to our 'Host' server.
+	Const ADDRESS:String = "127.0.0.1" ' "localhost"
+	
 	' This will be the remote-port we use to host our server.
 	' This is also what we when our clients are connecting.
 	Const PORT:= 5029
@@ -29,9 +32,6 @@ Class Application Extends App Implements IServerApplication Final
 	End
 	
 	Method CreateContainers:Void()
-		' Create a 'PacketManager' to handle memory for us.
-		Packets = New PacketManager()
-		
 		' Create a container for our clients (Not to be confused with 'NetUserHandles').
 		Clients = New List<Client>()
 		
@@ -85,10 +85,18 @@ Class Application Extends App Implements IServerApplication Final
 		
 		Print("Server socket bound on port " + Port + "; everything checks out.")
 		
+		Print("Attempting to connect a 'Client'...")
+		
+		Local C:= New Client(ADDRESS, Port, Self)
+		
+		Clients.AddLast(C)
+		
 		Return
 	End
 	
 	Method OnServerUserAccepted:Bool(Host:Server, User:NetUserHandle)
+		Users.AddLast(User)
+		
 		' Always agree to more potential clients.
 		Return True
 	End
@@ -96,7 +104,6 @@ Class Application Extends App Implements IServerApplication Final
 	Public
 	
 	' Fields:
-	Field Packets:PacketManager
 	
 	' The 'Server' our 'Client' objects will connect to.
 	Field Host:Server

@@ -19,14 +19,16 @@ Public
 ' Classes:
 Class NetUserHandle Final
 	' Constructor(s):
-	Method New(Connection:Socket)
+	Method New(Connection:Socket, Address:SocketAddress=Null)
 		Self.Connection = Connection
+		Self.Address = Address
 	End
 	
 	' Fields (Protected):
 	Protected
 	
 	Field Connection:Socket
+	Field Address:SocketAddress
 	
 	Public
 End
