@@ -4,7 +4,7 @@ Public
 
 ' Imports (Public):
 Import packet
-Import handle
+Import user
 
 ' Imports (Private):
 Private
@@ -84,6 +84,16 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 		Return True
 	End
 	
+	Method Send:Int(U:NetUserHandle, P:Packet)
+		Return RawSendPacketTo(U.Connection, P)
+	End
+	
+	Method SendAsync:Void(U:NetUserHandle, P:Packet)
+		RawSendPacketToAsync(U.Connection, P)
+		
+		Return
+	End
+	
 	' Methods (Protected):
 	Protected
 	
@@ -114,6 +124,8 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 			' Our parent said yes, accept more.
 			AcceptClients()
 		Endif
+		
+		AcceptMessagesWith(Source)
 		
 		Return
 	End

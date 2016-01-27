@@ -9,6 +9,7 @@ Import packet
 Private
 
 Import brl.pool
+Import brl.socket
 Import brl.databuffer
 'Import brl.datastream
 
@@ -87,14 +88,10 @@ Class PacketManager Extends Pool<Packet> Final
 	' be freed if we couldn't find an associated 'Packet'.
 	' The return-value is the 'Packet' found, if any.
 	Method FinishTransmission:Packet(Buffer:DataBuffer, CanDiscardData:Bool)
-		Local P:= GetTransmission(Buffer)
+		Local P:= GetTransmission(Buffer, CanDiscardData)
 		
 		If (P = Null) Then
-			If (CanDiscardData) Then
-				Buffer.Discard()
-				
-				Return
-			Endif
+			Return Null
 		Endif
 		
 		FinishTransmission(P)
@@ -104,14 +101,41 @@ Class PacketManager Extends Pool<Packet> Final
 	
 	' This retrieves a 'Packet' that is "in transit", using its 'DataBuffer' as an identifier.
 	' If a 'Packet' could not be found, 'Null' is returned.
-	Method GetTransmission:Packet(Buffer:DataBuffer)
+	Method GetTransmission:Packet(Buffer:DataBuffer, CanDiscard:Bool)
 		For Local P:= Eachin InTransit
 			If (P.Data = Buffer) Then
 				Return P
 			Endif
 		Next
 		
+		If (CanDiscard) Then
+			Buffer.Discard()
+			
+			Return
+		Endif
+		
 		Return Null
+	End
+	
+	' Macros:
+	
+	#Rem
+		This command relinquishes control over 'P', as well as its storage.
+		
+		This is useful for ending a controlled pattern,
+		like 'AcceptMessagesWith' in the 'NetManager' class.
+	#End
+	
+	Method KillTransmission:Bool(S:Socket, P:Packet)
+		Return CompleteTransmission(P)
+	End
+	
+	Method KillTransmission:Bool(P:Packet)
+		Return Free(FinishTransmission(P))
+	End
+	
+	Method KillTransmission:Bool(Data:DataBuffer, CanDiscard:Bool)
+		Return Free(FinishTransmission(Data, CanDiscard))
 	End
 	
 	' Fields:

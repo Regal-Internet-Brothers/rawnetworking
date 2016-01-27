@@ -86,6 +86,12 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		Return
 	End
 	
+	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
+		Print("Unknwon packet data found: " + Offset + ", {" + Count + "}")
+		
+		Return
+	End
+	
 	' These are callbacks defined by 'ServerApplication', and are called by 'Server' objects:
 	
 	' This is called when a server is attempting to bind a socket.

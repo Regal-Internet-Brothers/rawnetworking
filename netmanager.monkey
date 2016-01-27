@@ -4,13 +4,13 @@ Public
 
 ' Imports (Public):
 Import packet
-Import handle
+Import user
 
 ' Imports (Private):
 Private
 
 Import brl.socket
-'Import brl.databuffer
+Import brl.databuffer
 
 Public
 
@@ -19,12 +19,13 @@ Interface NetApplication
 	' Methods:
 	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
 	Method OnPacketReceived:Void(Data:Packet, From:NetUserHandle)
+	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
 End
 
 ' Classes:
 
 ' This class covers common functionality between 'Server' and 'Client'.
-Class NetManager<ParentType> Extends PacketManager Abstract
+Class NetManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete Abstract
 	' Constructor(s):
 	
 	' This constructor does not initiate anything.
@@ -49,41 +50,95 @@ Class NetManager<ParentType> Extends PacketManager Abstract
 	End
 	
 	' Methods (Public):
-	' Nothing so far.
 	
-	' Methods (Protected):
-	Protected
+	' These messages send 'P' directly to 'S'.
+	' These overloads are protocol specific,
+	' and as such, are not future-proof at all:
 	
-	Method __ClearInboundPacket:Void(P:Packet)
-		If (P <> Null) Then
-			Free(FinishTransmission(P))
-		Endif
+	' The return-value of this method indicates
+	' the underlying 'Socket.Send' method's result.
+	Method RawSendPacketTo:Int(S:Socket, P:Packet)
+		' Since we're not using asynchronous behavior,
+		' we don't need to mark this 'Packet' object.
+		Return S.Send(P.Data, P.Offset, P.Length)
 	End
 	
-	Method __ClearInboundPacket:Void()
-		__ClearInboundPacket(__InboundPacket)
-		__InboundPacket = Null
+	Method RawSendPacketToAsync:Void(S:Socket, P:Packet)
+		' Mark 'P', so we can take care of it later.
+		MarkTransmission(P)
+		
+		' Send 'P' to 'S' asynchronously.
+		S.SendAsync(P.Data, P.Offset, P.Length, Self)
 		
 		Return
 	End
 	
-	' This enables the use of '__InboundPacket'.
-	Method __UseInboundPacket:Packet()
-		If (__InboundPacket = Null) Then
-			__InboundPacket = __AllocateInboundPacket()
-		Endif
-		
-		Return __AllocateInboundPacket
+	' Methods (Protected):
+	Protected
+	
+	Method AcceptMessagesWith:Bool(S:Socket)
+		Return AcceptMessagesWith(S, Allocate())
 	End
 	
-	' This allocates an "inbound packet", then returns it.
-	' To use '__InboundPacket', please call '__UseInboundPacket'.
-	Method __AllocateInboundPacket:Packet()
-		Local P:= Allocate()
+	' If the 'MarkPacket' argument is set to 'False',
+	' this method may provide undefined behavior.
+	Method AcceptMessagesWith:Bool(S:Socket, P:Packet, MarkPacket:Bool=True)
+		If (MarkPacket) Then
+			MarkTransmission(P)
+		Endif
 		
-		MarkTransmission(P)
+		S.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
 		
-		Return P
+		' Return the default response.
+		Return True
+	End
+	
+	' This represents 'S' using a 'NetUserHandle' object.
+	Method Represent:NetUserHandle(S:Socket)
+		' Not very efficient, but it works for now.
+		Return New NetUserHandle(S, S.RemoteAddress)
+	End
+	
+	Method Represent:NetUserHandle(S:Socket, Address:SocketAddress)
+		' Once again, not very efficient, but it works for now.
+		Return New NetUserHandle(S, Address)
+	End
+	
+	' BRL:
+	Method OnSendComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
+		If (Source <> Connection) Then
+			Return
+		Endif
+		
+		' Kill the transmission; finish the transmission, and if
+		' successful, give the associated 'Packet' object back.
+		KillTransmission(Data, False)
+		
+		Return
+	End
+	
+	Method OnReceiveComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
+		If (Source <> Connection) Then
+			Return
+		Endif
+		
+		If (IsOpen) Then
+			Local P:= GetTransmission(Data, False)
+			
+			If (P <> Null) Then
+				Parent.OnPacketReceived(P, Represent(Source))
+				
+				' Start receiving again. (Do not mark this packet again)
+				AcceptMessagesWith(Source, P, False)
+			Else
+				Parent.OnUnknownPacket(Data, Offset, Count)
+			Endif
+		Else
+			' Kill the transmission, and if we don't
+			' recognize the enclosed data, throw it out.
+			' This behavior may change in the future.
+			KillTransmission(Data, True)
+		Endif
 	End
 	
 	Public
@@ -128,10 +183,6 @@ Class NetManager<ParentType> Extends PacketManager Abstract
 	
 	' This is the socket we use most networking operations. (Protocol-specific)
 	Field _Connection:Socket
-	
-	' This is used constantly to receive information.
-	' The state of this object is implementation-defined.
-	Field __InboundPacket:Packet
 	
 	' Meta:
 	Field _Port:Int = PORT_AUTO

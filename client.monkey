@@ -4,7 +4,7 @@ Public
 
 ' Imports (Public):
 Import packet
-Import handle
+Import user
 
 ' Imports (Private):
 Private
@@ -24,7 +24,7 @@ End
 ' Classes:
 
 ' This is used to connect to a 'Server'; not to be confused with 'NetHandle'.
-Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete, IOnSendComplete, IOnReceiveComplete ' Final
+Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete ' Final
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin'.
@@ -43,10 +43,7 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	Method Close:Void()
 		Super.Close()
 		
-		' Restore the correct flags:
 		AcceptingMessages = False
-		
-		Return
 	End
 	
 	' Methods (Public):
@@ -66,32 +63,29 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 		Return
 	End
 	
-	' This method's return-value indicates if we successfully started accepting messages.
-	' If we are already accepting, this will return 'False'.
-	' Usage of this method is not safe unless 'IsOpen' is 'True'.
 	Method AcceptMessages:Bool()
 		If (AcceptingMessages) Then
 			Return False
 		Endif
 		
-		Local P:= Allocate()
+		Local Response:= AcceptMessagesWith(Connection)
 		
-		Connection.ReceiveAsync(P.Data, P.Offset, , onComplete:IOnReceiveComplete )
+		If (Response) Then
+			AcceptingMessages = True
+			
+			Return True ' AcceptingMessages
+		Endif
 		
 		' Return the default response.
-		Return True
+		Return False
 	End
 	
 	Method Send:Int(P:Packet)
-		Connection.Send(P.Data, P.Offset, P.Length)
-		
-		Return 0
+		Return RawSendPacketTo(Connection, P)
 	End
 	
 	Method SendAsync:Void(P:Packet)
-		MarkTransmission(P)
-		
-		Connection.SendAsync(P.Data, P.Offset, P.Length, Self)
+		RawSendPacketToAsync(Connection, P)
 		
 		Return
 	End
@@ -114,37 +108,11 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 		Return
 	End
 	
-	Method OnSendComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
-		If (Source <> Connection) Then
-			Return
-		Endif
-		
-		' Finish the transmission, then keep the 'Packet' object. ('Null' safe operation)
-		Free(FinishTransmission(Data, False)) ' True
-		
-		Return
-	End
-	
-	Method OnReceiveComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
-		If (Source <> Connection) Then
-			Return
-		Endif
-		
-		If (IsOpen) Then
-			Local P:= __UseInboundPacket()
-			
-			Connection.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
-		Else
-			__ClearInboundPacket()
-		Endif
-	End
-	
 	Public
 	
 	' Fields (Protected):
 	Protected
 	
-	' Booleans / Flags:
 	Field AcceptingMessages:Bool = False
 	
 	Public

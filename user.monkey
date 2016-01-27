@@ -17,7 +17,16 @@ Import brl.socket
 Public
 
 ' Classes:
-Class NetUserHandle Final
+Class NetUserHandle ' Final
+	' Functions:
+	Function Equal:Bool(X:NetUserHandle, Y:NetUserHandle)
+		If (X = Y) Then
+			Return True
+		Endif
+		
+		Return ((X.Connection = Y.Connection) And (X.Address = Y.Address))
+	End
+	
 	' Constructor(s):
 	
 	' The 'Connection' argument represents a 'Socket' usable
@@ -27,6 +36,11 @@ Class NetUserHandle Final
 	Method New(Connection:Socket, Address:SocketAddress)
 		Self.Connection = Connection
 		Self.Address = Address
+	End
+	
+	' Methods:
+	Method Equals:Bool(U:NetUserHandle)
+		Return Equal(Self, U)
 	End
 	
 	' Properties (Public):
