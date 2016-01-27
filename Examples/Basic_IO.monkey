@@ -8,7 +8,7 @@ Import mojo
 Import regal.rawnetworking
 
 ' Classes:
-Class Application Extends App Implements IServerApplication Final
+Class Application Extends App Implements ServerApplication, ClientApplication Final
 	' Constant variable(s):
 	
 	' This will be the hostname used to connect to our 'Host' server.
@@ -73,7 +73,20 @@ Class Application Extends App Implements IServerApplication Final
 	' Methods (Protected):
 	Protected
 	
-	' These are callbacks defined by 'IServerApplication', and are called by 'Server' objects:
+	' These are callbacks defined by 'NetApplication', and are called by 'Server' or 'Client' objects:
+	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
+		Return False ' True
+	End
+	
+	Method OnPacketReceived:Void(Data:Packet, From:NetUserHandle)
+		Print("Message received. (" + Data.Length + " bytes)")
+		Print("Message contents:")
+		Print(Data.ReadLine())
+		
+		Return
+	End
+	
+	' These are callbacks defined by 'ServerApplication', and are called by 'Server' objects:
 	
 	' This is called when a server is attempting to bind a socket.
 	Method OnServerBound:Void(Host:Server, Port:Int, Response:Bool)
@@ -101,8 +114,19 @@ Class Application Extends App Implements IServerApplication Final
 		Return True
 	End
 	
-	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
-		Return False ' True
+	Method OnClientBound:Bool(C:Client, Port:Int, Response:Bool)
+		If (Not Response) Then
+			Print("Failed to bind client socket on port " + Port + ".")
+			
+			Return
+		Endif
+		
+		Print("Client socket bound on port " + Port + ".")
+		
+		Print("Allowing messages...")
+		
+		' Tell 'C' to accept messages.
+		Return True
 	End
 	
 	Public

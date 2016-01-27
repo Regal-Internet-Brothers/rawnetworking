@@ -10,6 +10,7 @@ Import handle
 Private
 
 Import brl.socket
+'Import brl.databuffer
 
 Public
 
@@ -17,6 +18,7 @@ Public
 Interface NetApplication
 	' Methods:
 	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
+	Method OnPacketReceived:Void(Data:Packet, From:NetUserHandle)
 End
 
 ' Classes:
@@ -46,8 +48,45 @@ Class NetManager<ParentType> Extends PacketManager Abstract
 		Return
 	End
 	
-	' Methods:
+	' Methods (Public):
 	' Nothing so far.
+	
+	' Methods (Protected):
+	Protected
+	
+	Method __ClearInboundPacket:Void(P:Packet)
+		If (P <> Null) Then
+			Free(FinishTransmission(P))
+		Endif
+	End
+	
+	Method __ClearInboundPacket:Void()
+		__ClearInboundPacket(__InboundPacket)
+		__InboundPacket = Null
+		
+		Return
+	End
+	
+	' This enables the use of '__InboundPacket'.
+	Method __UseInboundPacket:Packet()
+		If (__InboundPacket = Null) Then
+			__InboundPacket = __AllocateInboundPacket()
+		Endif
+		
+		Return __AllocateInboundPacket
+	End
+	
+	' This allocates an "inbound packet", then returns it.
+	' To use '__InboundPacket', please call '__UseInboundPacket'.
+	Method __AllocateInboundPacket:Packet()
+		Local P:= Allocate()
+		
+		MarkTransmission(P)
+		
+		Return P
+	End
+	
+	Public
 	
 	' Properties (Public):
 	Method Port:Int() Property
@@ -89,6 +128,10 @@ Class NetManager<ParentType> Extends PacketManager Abstract
 	
 	' This is the socket we use most networking operations. (Protocol-specific)
 	Field _Connection:Socket
+	
+	' This is used constantly to receive information.
+	' The state of this object is implementation-defined.
+	Field __InboundPacket:Packet
 	
 	' Meta:
 	Field _Port:Int = PORT_AUTO

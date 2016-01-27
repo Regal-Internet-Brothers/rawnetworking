@@ -36,7 +36,14 @@ Class PacketManager Extends Pool<Packet> Final
 	End
 	
 	' Desturctor(s):
+	
+	' Calling this method is considered unsafe.
+	' Use with caution, or not at all.
 	Method Discard:Void()
+		For Local P:= Eachin InTransit
+			Free(FinishTransmission(P))
+		Next
+		
 		InTransit.Clear()
 		
 		Return
@@ -45,6 +52,7 @@ Class PacketManager Extends Pool<Packet> Final
 	' Methods:
 	
 	' This resets a 'Packet', allowing it to be used again via 'Allocate'.
+	' If 'P' is 'Null', this will do nothing.
 	Method Free:Void(P:Packet)
 		If (P = Null) Then
 			Return
@@ -53,6 +61,8 @@ Class PacketManager Extends Pool<Packet> Final
 		P.Reset()
 		
 		Super.Free(P)
+		
+		Return
 	End
 	
 	' This marks a 'Packet' as currently "in transit".
@@ -65,10 +75,11 @@ Class PacketManager Extends Pool<Packet> Final
 	
 	' This removes the "transmission state" from 'P'.
 	' After calling this, it's a good idea to call 'Free' on this 'Packet'.
-	Method FinishTransmission:Void(P:Packet)
+	' The return-value is 'P' if the operation was successful.
+	Method FinishTransmission:Packet(P:Packet)
 		InTransit.RemoveEach(P)
 		
-		Return
+		Return P
 	End
 	
 	' This calls the main overload with the result of 'GetTransmission'.

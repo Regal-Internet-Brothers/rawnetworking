@@ -69,6 +69,8 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 		This is used to begin accepting "clients" ('NetUserHandles').
 		The return-value of this method indicates if we could start accepting clients again.
 		If we are already accepting "clients", this will return 'False'.
+		
+		Usage of this method is not safe unless 'IsOpen' is 'True'.
 	#End
 	
 	Method AcceptClients:Bool()

@@ -19,16 +19,47 @@ Public
 ' Classes:
 Class NetUserHandle Final
 	' Constructor(s):
-	Method New(Connection:Socket, Address:SocketAddress=Null)
+	
+	' The 'Connection' argument represents a 'Socket' usable
+	' to contact the entity this object represents.
+	' The 'Address' argument is only technically required
+	' for UDP, but is supplied regardless. (May or may not be 'Null')
+	Method New(Connection:Socket, Address:SocketAddress)
 		Self.Connection = Connection
 		Self.Address = Address
 	End
 	
+	' Properties (Public):
+	Method Connection:Socket() Property
+		Return Self._Connection
+	End
+	
+	Method Address:SocketAddress() Property
+		Return Self._Address
+	End
+	
+	' Properties (Protected):
+	Protected
+	
+	Method Connection:Void(Input:Socket) Property
+		Self._Connection = Input
+		
+		Return
+	End
+	
+	Method Address:Void(Input:SocketAddress) Property
+		Self._Address = Input
+		
+		Return
+	End
+	
+	Public
+	
 	' Fields (Protected):
 	Protected
 	
-	Field Connection:Socket
-	Field Address:SocketAddress
+	Field _Connection:Socket
+	Field _Address:SocketAddress
 	
 	Public
 End
