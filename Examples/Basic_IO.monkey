@@ -16,7 +16,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' This will be the remote-port we use to host our server.
 	' This is also what we when our clients are connecting.
-	Const PORT:= 5029
+	Const PORT:= Server.PORT_AUTO ' 5029
 	
 	' Constructor(s):
 	Method OnCreate:Int()
@@ -26,7 +26,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		CreateContainers()
 		
 		' Start our server.
-		Host = New Server(PORT, Self) ' PORT_AUTO
+		Host = New Server(PORT, Self) ' Server.PORT_AUTO
 		
 		Return 0
 	End
@@ -95,11 +95,11 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	' These are callbacks defined by 'ServerApplication', and are called by 'Server' objects:
 	
 	' This is called when a server is attempting to bind a socket.
-	Method OnServerBound:Void(Host:Server, Port:Int, Response:Bool)
+	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 		If (Not Response) Then
 			Print("Failed to bound server socket on port " + Port + ".")
 			
-			Return
+			Return False
 		Endif
 		
 		Print("Server socket bound on port " + Port + "; everything checks out.")
@@ -110,7 +110,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		Clients.AddLast(C)
 		
-		Return
+		' Tell 'Host' to start accepting users.
+		Return True
 	End
 	
 	Method OnServerUserAccepted:Bool(Host:Server, User:NetUserHandle)
@@ -124,7 +125,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		If (Not Response) Then
 			Print("Failed to bind client socket on port " + Port + ".")
 			
-			Return
+			Return False
 		Endif
 		
 		Print("Client socket bound on port " + Port + ".")
@@ -147,4 +148,12 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' A listo of 'NetUserHandles' connected to 'Host'.
 	Field Users:List<NetUserHandle>
+End
+
+' Functions:
+Function Main:Int()
+	New Application()
+	
+	' Return the default response.
+	Return 0
 End

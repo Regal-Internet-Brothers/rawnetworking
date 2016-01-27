@@ -38,6 +38,11 @@ Class NetUserHandle ' Final
 		Self.Address = Address
 	End
 	
+	Method New(Connection:Socket)
+		Self.Connection = Connection
+		Self.Address = Connection.RemoteAddress
+	End
+	
 	' Methods:
 	Method Equals:Bool(U:NetUserHandle)
 		Return Equal(Self, U)

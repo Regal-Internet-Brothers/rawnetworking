@@ -15,6 +15,3 @@ Import user
 
 Import packet
 Import packetmanager
-
-' Constant variable(s):
-Const PORT_AUTO:= 0

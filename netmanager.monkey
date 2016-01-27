@@ -3,6 +3,7 @@ Strict
 Public
 
 ' Imports (Public):
+Import packetmanager
 Import packet
 Import user
 
@@ -26,6 +27,9 @@ End
 
 ' This class covers common functionality between 'Server' and 'Client'.
 Class NetManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete Abstract
+	' Constant variable(s):
+	Const PORT_AUTO:= 0
+	
 	' Constructor(s):
 	
 	' This constructor does not initiate anything.

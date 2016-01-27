@@ -3,6 +3,7 @@ Strict
 Public
 
 ' Imports (Public):
+Import netmanager
 Import packet
 Import user
 
@@ -29,7 +30,7 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin' using 'Port'.
-	Method New(Parent:ServerApplication, Port:Int, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+	Method New(Port:Int, Parent:ServerApplication, PacketPoolSize:Int=Defaulk_PacketPoolSize)
 		Super.New(Parent, PacketPoolSize)
 		
 		Begin(Port)
@@ -97,7 +98,7 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	' Methods (Protected):
 	Protected
 	
-	Method OnBindComplete:Void(Bound:Bool, Source:Socket)
+	Method OnBindComplete:Void(Bound:Bool, HostSocket:Socket)
 		' Tell our parent what's going on.
 		Local Response:= Parent.OnServerBound(Self, Port, Bound)
 		
@@ -105,7 +106,7 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 			Return
 		Endif
 		
-		Self.Connection = Source
+		Self.Connection = HostSocket
 		
 		' Check if our parent wants us to accept "clients" initially.
 		If (Response) Then
@@ -114,18 +115,19 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 		Endif
 	End
 	
-	Method OnAcceptComplete:Void(Connection:Socket, Source:Socket)
+	Method OnAcceptComplete:Void(NewConnection:Socket, Source:Socket)
 		If (Connection <> Self.Connection) Then
 			Return
 		Endif
 		
 		' Ask our parent if we should continue accepting "clients" (If available. - 'NetUserHandles').
-		If (Parent.OnServerUserAccepted(Self, New NetUserHandle(Source))) Then
+		If (Parent.OnServerUserAccepted(Self, New NetUserHandle(NewConnection))) Then
 			' Our parent said yes, accept more.
 			AcceptClients()
 		Endif
 		
-		AcceptMessagesWith(Source)
+		' Start accepting messages from 'NewConnection'. (Remote user)
+		AcceptMessagesWith(NewConnection)
 		
 		Return
 	End

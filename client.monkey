@@ -3,6 +3,7 @@ Strict
 Public
 
 ' Imports (Public):
+Import netmanager
 Import packet
 Import user
 
@@ -49,7 +50,7 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	' Methods (Public):
 	
 	' This connects to a remote 'Server' using 'Hostname' and 'Port' over 'Protocol'.
-	Method Begin:Void(Hostname:String, Port:Int, Protocol:String="stream")
+	Method Begin:Void(Hostname:String, RemotePort:Int, Protocol:String="stream")
 		' Set the internal port. (Done first for safety)
 		Port = RemotePort
 		
@@ -93,12 +94,12 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	' Methods (Protected):
 	Protected
 	
-	Method OnConnectComplete:Void(Success:Bool, Source:Socket)
+	Method OnConnectComplete:Void(Success:Bool, ClientSocket:Socket)
 		' Tell our parent what's going on.
 		Local Response:= Parent.OnClientBound(Self, Port, Success)
 		
 		If (Success) Then
-			Self.Connection = Source
+			Self.Connection = ClientSocket
 			
 			If (Response) Then
 				AcceptMessages()

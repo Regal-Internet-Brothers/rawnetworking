@@ -17,7 +17,7 @@ Public
 
 ' This handles the storage of 'Packet' objects,
 ' as well as their "transmission states".
-Class PacketManager Extends Pool<Packet> Final
+Class PacketManager Extends Pool<Packet>
 	' Constant variable(s):
 	
 	' Defaults:
@@ -111,7 +111,7 @@ Class PacketManager Extends Pool<Packet> Final
 		If (CanDiscard) Then
 			Buffer.Discard()
 			
-			Return
+			Return Null
 		Endif
 		
 		Return Null
@@ -127,15 +127,33 @@ Class PacketManager Extends Pool<Packet> Final
 	#End
 	
 	Method KillTransmission:Bool(S:Socket, P:Packet)
-		Return CompleteTransmission(P)
+		Return KillTransmission(P)
 	End
 	
 	Method KillTransmission:Bool(P:Packet)
-		Return Free(FinishTransmission(P))
+		Local Output:= FinishTransmission(P)
+		
+		If (Output <> Null) Then
+			Free(Output)
+			
+			Return True
+		Endif
+		
+		' Return the default response.
+		Return False
 	End
 	
 	Method KillTransmission:Bool(Data:DataBuffer, CanDiscard:Bool)
-		Return Free(FinishTransmission(Data, CanDiscard))
+		Local P:= FinishTransmission(Data, CanDiscard)
+		
+		If (P <> Null) Then
+			Free(P)
+			
+			Return True
+		Endif
+		
+		' Return the default response.
+		Return False
 	End
 	
 	' Fields:
