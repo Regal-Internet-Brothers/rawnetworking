@@ -13,6 +13,12 @@ Import brl.socket
 
 Public
 
+' Interfaces:
+Interface NetApplication
+	' Methods:
+	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
+End
+
 ' Classes:
 
 ' This class covers common functionality between 'Server' and 'Client'.

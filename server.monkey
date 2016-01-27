@@ -14,7 +14,7 @@ Import brl.socket
 Public
 
 ' Interfaces:
-Interface ServerApplication
+Interface ServerApplication Extends NetApplication
 	' Methods:
 	
 	' The return-value of this methods indicates if the server should start accepting "clients" ('NetUserHandles').

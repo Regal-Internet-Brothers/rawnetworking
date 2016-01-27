@@ -101,6 +101,10 @@ Class Application Extends App Implements IServerApplication Final
 		Return True
 	End
 	
+	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
+		Return False ' True
+	End
+	
 	Public
 	
 	' Fields:

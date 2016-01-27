@@ -46,6 +46,10 @@ Class PacketManager Extends Pool<Packet> Final
 	
 	' This resets a 'Packet', allowing it to be used again via 'Allocate'.
 	Method Free:Void(P:Packet)
+		If (P = Null) Then
+			Return
+		Endif
+		
 		P.Reset()
 		
 		Super.Free(P)

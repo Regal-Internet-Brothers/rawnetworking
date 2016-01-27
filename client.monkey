@@ -14,7 +14,7 @@ Import brl.socket
 Public
 
 ' Interfaces:
-Interface ClientApplication
+Interface ClientApplication Extends NetApplication
 	' Methods:
 	Method OnClientBound:Void(C:Client, Port:Int, Response:Bool)
 End
@@ -55,10 +55,16 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	End
 	
 	Method Send:Int(P:Packet)
+		Connection.Send(P.Data, 0, P.Length)
+		
 		Return 0
 	End
 	
-	Method SendAsync:Void()
+	Method SendAsync:Void(P:Packet)
+		MarkTransmission(P)
+		
+		Connection.SendAsync(P.Data, 0, P.Length, Self)
+		
 		Return
 	End
 	
@@ -68,6 +74,18 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	Method OnConnectComplete:Void(Success:Bool, Source:Socket)
 		' Tell our parent what's going on.
 		Parent.OnClientBound(Self, Port, Success)
+		
+		Self.Connection = Source
+		
+		Return
+	End
+	
+	Method OnSendComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
+		If (Source <> Connection) Then
+			Return
+		Endif
+		
+		Free(FinishTransmission(Data, False)) ' True
 		
 		Return
 	End
