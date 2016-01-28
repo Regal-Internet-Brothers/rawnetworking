@@ -2,6 +2,10 @@ Strict
 
 Public
 
+' Preprocessor related:
+'#GLFW_USE_MINGW = False
+#MOJO_AUTO_SUSPEND_ENABLED = False
+
 ' Imports:
 Import mojo
 
@@ -16,7 +20,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' This will be the remote-port we use to host our server.
 	' This is also what we when our clients are connecting.
-	Const PORT:= Server.PORT_AUTO ' 5029
+	Const PORT:= 27015 ' Server.PORT_AUTO ' 5029
 	
 	' Constructor(s):
 	Method OnCreate:Int()
@@ -32,11 +36,11 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	End
 	
 	Method CreateContainers:Void()
-		' Create a container for our clients (Not to be confused with 'NetUserHandles').
+		' Create a container for our clients (Not to be confused with 'NetworkUsers').
 		Clients = New List<Client>()
 		
 		' Create a container of users (Not to be confused with 'Clients').
-		Users = New List<NetUserHandle>()
+		Users = New List<NetworkUser>()
 		
 		Return
 	End
@@ -59,6 +63,18 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		UpdateAsyncEvents()
 		
+		Local Character:= GetChar()
+		
+		If (Character > 32) Then
+			For Local U:= Eachin Users
+				Local P:= Host.AllocatePacket()
+				
+				P.WriteLine("Key pressed: " + Character + " ('" + String.FromChar(Character) + "')")
+				
+				Host.Send(P, U)
+			Next
+		Endif
+		
 		Return 0
 	End
 	
@@ -78,7 +94,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		Return False ' True
 	End
 	
-	Method OnPacketReceived:Void(Data:Packet, From:NetUserHandle)
+	Method OnPacketReceived:Void(Data:Packet, From:NetworkUser)
 		Print("Message received. (" + Data.Length + " bytes)")
 		Print("Message contents:")
 		Print(Data.ReadLine())
@@ -106,15 +122,13 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		Print("Attempting to connect a 'Client'...")
 		
-		Local C:= New Client(ADDRESS, Port, Self)
-		
-		Clients.AddLast(C)
+		Clients.AddLast(New Client(ADDRESS, Host.Port, Self))
 		
 		' Tell 'Host' to start accepting users.
 		Return True
 	End
 	
-	Method OnServerUserAccepted:Bool(Host:Server, User:NetUserHandle)
+	Method OnServerUserAccepted:Bool(Host:Server, User:NetworkUser)
 		Users.AddLast(User)
 		
 		' Always agree to more potential clients.
@@ -128,7 +142,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 			Return False
 		Endif
 		
-		Print("Client socket bound on port " + Port + ".")
+		Print("Client socket connected to port " + Port + ".")
 		
 		Print("Allowing messages...")
 		
@@ -146,8 +160,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	' A list of 'Clients' that have established a connection to 'Host'.
 	Field Clients:List<Client>
 	
-	' A listo of 'NetUserHandles' connected to 'Host'.
-	Field Users:List<NetUserHandle>
+	' A listo of 'NetworkUsers' connected to 'Host'.
+	Field Users:List<NetworkUser>
 End
 
 ' Functions:

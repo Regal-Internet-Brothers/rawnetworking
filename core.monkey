@@ -19,22 +19,22 @@ Public
 Interface NetApplication
 	' Methods:
 	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
-	Method OnPacketReceived:Void(Data:Packet, From:NetUserHandle)
+	Method OnPacketReceived:Void(Data:Packet, From:NetworkUser)
 	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
 End
 
 ' Classes:
 
 ' This class covers common functionality between 'Server' and 'Client'.
-Class NetManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete Abstract
+Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete Abstract
 	' Constant variable(s):
 	Const PORT_AUTO:= 0
 	
 	' Constructor(s):
 	
 	' This constructor does not initiate anything.
-	Method New(Parent:ParentType, PacketPoolSize:Int=Defaulk_PacketPoolSize)
-		Super.New(PacketPoolSize)
+	Method New(Parent:ParentType, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(PacketSize, PacketPoolSize)
 		
 		Self.Parent = Parent
 	End
@@ -44,10 +44,13 @@ Class NetManager<ParentType> Extends PacketManager Implements IOnSendComplete, I
 	' Please call-up to this destructor when extending this class.
 	Method Close:Void()
 		' Close our connection.
-		Connection.Close()
+		If (Connection <> Null) Then
+			Connection.Close()
+			
+			Connection = Null
+		Endif
 		
 		' Restore default values:
-		Connection = Null
 		Port = PORT_AUTO
 		
 		Return
@@ -81,7 +84,7 @@ Class NetManager<ParentType> Extends PacketManager Implements IOnSendComplete, I
 	Protected
 	
 	Method AcceptMessagesWith:Bool(S:Socket)
-		Return AcceptMessagesWith(S, Allocate())
+		Return AcceptMessagesWith(S, AllocatePacket())
 	End
 	
 	' If the 'MarkPacket' argument is set to 'False',
@@ -91,21 +94,23 @@ Class NetManager<ParentType> Extends PacketManager Implements IOnSendComplete, I
 			MarkTransmission(P)
 		Endif
 		
+		P.Reset()
+		
 		S.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
 		
 		' Return the default response.
 		Return True
 	End
 	
-	' This represents 'S' using a 'NetUserHandle' object.
-	Method Represent:NetUserHandle(S:Socket)
+	' This represents 'S' using a 'NetworkUser' object.
+	Method Represent:NetworkUser(S:Socket)
 		' Not very efficient, but it works for now.
-		Return New NetUserHandle(S, S.RemoteAddress)
+		Return New NetworkUser(S, S.RemoteAddress)
 	End
 	
-	Method Represent:NetUserHandle(S:Socket, Address:SocketAddress)
+	Method Represent:NetworkUser(S:Socket, Address:SocketAddress)
 		' Once again, not very efficient, but it works for now.
-		Return New NetUserHandle(S, Address)
+		Return New NetworkUser(S, Address)
 	End
 	
 	' BRL:

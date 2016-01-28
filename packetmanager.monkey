@@ -21,20 +21,37 @@ Class PacketManager Extends Pool<Packet>
 	' Constant variable(s):
 	
 	' Defaults:
+	Const Default_PacketSize:= 1024 ' 4096
 	Const Defaulk_PacketPoolSize:= 4 ' 8 ' 16
 	
 	' Constructor(s):
-	Method New(Capacity:Int=Defaulk_PacketPoolSize)
-		Super.New(Capacity)
-		
+	Method New(PacketSize:Int=Default_PacketSize, InitialCapacity:Int=Defaulk_PacketPoolSize)
 		Construct()
+		
+		Self.PacketSize = PacketSize
+		
+		GenerateInitialPackets(InitialCapacity)
 	End
 	
 	Method Construct:Void()
 		InTransit = New Stack<Packet>()
+		Pool = New Stack<T>()
 		
 		Return
 	End
+	
+	' Constructor(s) (Protected):
+	Protected
+	
+	Method GenerateInitialPackets:Void(InitialCapacity:Int)
+		For Local I:= 1 To InitialCapacity
+			Pool.Push(GeneratePacket())
+		Next
+		
+		Return
+	End
+	
+	Public
 	
 	' Desturctor(s):
 	
@@ -50,7 +67,14 @@ Class PacketManager Extends Pool<Packet>
 		Return
 	End
 	
-	' Methods:
+	' Methods (Public):
+	Method AllocatePacket:Packet()
+		If (Pool.IsEmpty) Then
+			Return GeneratePacket()
+		Endif
+		
+		Return Pool.Pop()
+	End
 	
 	' This resets a 'Packet', allowing it to be used again via 'Allocate'.
 	' If 'P' is 'Null', this will do nothing.
@@ -61,7 +85,7 @@ Class PacketManager Extends Pool<Packet>
 		
 		P.Reset()
 		
-		Super.Free(P)
+		Pool.Push(P)
 		
 		Return
 	End
@@ -123,7 +147,7 @@ Class PacketManager Extends Pool<Packet>
 		This command relinquishes control over 'P', as well as its storage.
 		
 		This is useful for ending a controlled pattern,
-		like 'AcceptMessagesWith' in the 'NetManager' class.
+		like 'AcceptMessagesWith' in the 'NetworkManager' class.
 	#End
 	
 	Method KillTransmission:Bool(S:Socket, P:Packet)
@@ -156,9 +180,64 @@ Class PacketManager Extends Pool<Packet>
 		Return False
 	End
 	
-	' Fields:
+	' Methods (Protected):
+	Protected
+	
+	Method GeneratePacket:Packet()
+		Return New Packet(PacketSize)
+	End
+	
+	Public
+	
+	' Properties (Public):
 	
 	' This holds handles to 'Packet' objects that are in transit.
 	' For details, see 'MarkTransmission' above.
-	Field InTransit:Stack<Packet>
+	Method InTransit:Stack<Packet>() Property
+		Return Self._InTransit
+	End
+	
+	Method PacketSize:Int() Property
+		Return Self._PacketSize
+	End
+	
+	' Properties (Protected):
+	Protected
+	
+	Method InTransit:Void(Input:Stack<Packet>) Property
+		Self._InTransit = Input
+		
+		Return
+	End
+	
+	Method Pool:Stack<Packet>() Property
+		Return Self._Pool
+	End
+	
+	Method Pool:Void(Input:Stack<Packet>) Property
+		Self._Pool = Input
+		
+		Return
+	End
+	
+	Method PacketSize:Void(Input:Int) Property
+		Self._PacketSize = Input
+		
+		Return
+	End
+	
+	Public
+	
+	' Fields (Public):
+	' Nothing so far.
+	
+	' Fields (Protected):
+	Protected
+	
+	Field _InTransit:Stack<Packet>
+	Field _Pool:Stack<Packet>
+	
+	Field _PacketSize:Int
+	
+	Public
 End

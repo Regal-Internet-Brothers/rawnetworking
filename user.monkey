@@ -17,9 +17,9 @@ Import brl.socket
 Public
 
 ' Classes:
-Class NetUserHandle ' Final
+Class NetworkUser ' Final
 	' Functions:
-	Function Equal:Bool(X:NetUserHandle, Y:NetUserHandle)
+	Function Equal:Bool(X:NetworkUser, Y:NetworkUser)
 		If (X = Y) Then
 			Return True
 		Endif
@@ -44,7 +44,7 @@ Class NetUserHandle ' Final
 	End
 	
 	' Methods:
-	Method Equals:Bool(U:NetUserHandle)
+	Method Equals:Bool(U:NetworkUser)
 		Return Equal(Self, U)
 	End
 	

@@ -3,7 +3,7 @@ Strict
 Public
 
 ' Imports (Public):
-Import netmanager
+Import core
 Import packet
 Import user
 
@@ -18,27 +18,27 @@ Public
 Interface ServerApplication Extends NetApplication
 	' Methods:
 	
-	' The return-value of this methods indicates if the server should start accepting "clients" ('NetUserHandles').
+	' The return-value of this methods indicates if the server should start accepting "clients" ('NetworkUsers').
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 	
 	' The return-value indicates if more "clients" should be accepted.
-	Method OnServerUserAccepted:Bool(Host:Server, User:NetUserHandle)
+	Method OnServerUserAccepted:Bool(Host:Server, User:NetworkUser)
 End
 
 ' Classes:
-Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, IOnAcceptComplete ' Final
+Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplete, IOnAcceptComplete ' Final
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin' using 'Port'.
-	Method New(Port:Int, Parent:ServerApplication, PacketPoolSize:Int=Defaulk_PacketPoolSize)
-		Super.New(Parent, PacketPoolSize)
+	Method New(Port:Int, Parent:ServerApplication, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(Parent, PacketSize, PacketPoolSize)
 		
 		Begin(Port)
 	End
 	
 	' This overload does not call 'Begin'.
-	Method New(Parent:ServerApplication, PacketPoolSize:Int=Defaulk_PacketPoolSize)
-		Super.New(Parent, PacketPoolSize)
+	Method New(Parent:ServerApplication, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(Parent, PacketSize, PacketPoolSize)
 	End
 	
 	' Destructor(s):
@@ -53,9 +53,6 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	
 	' Methods (Public):
 	Method Begin:Void(RemotePort:Int, Protocol:String="server")
-		' Set the internal port. (Done first for safety)
-		Port = RemotePort
-		
 		' Allocate a 'Socket' using 'Protocol'.
 		Local S:= New Socket(Protocol)
 		
@@ -67,7 +64,7 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	End
 	
 	#Rem
-		This is used to begin accepting "clients" ('NetUserHandles').
+		This is used to begin accepting "clients" ('NetworkUsers').
 		The return-value of this method indicates if we could start accepting clients again.
 		If we are already accepting "clients", this will return 'False'.
 		
@@ -85,11 +82,11 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 		Return True
 	End
 	
-	Method Send:Int(U:NetUserHandle, P:Packet)
+	Method Send:Int(P:Packet, U:NetworkUser)
 		Return RawSendPacketTo(U.Connection, P)
 	End
 	
-	Method SendAsync:Void(U:NetUserHandle, P:Packet)
+	Method SendAsync:Void(P:Packet, U:NetworkUser)
 		RawSendPacketToAsync(U.Connection, P)
 		
 		Return
@@ -99,14 +96,18 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	Protected
 	
 	Method OnBindComplete:Void(Bound:Bool, HostSocket:Socket)
+		Self.Port = HostSocket.LocalAddress.Port ' RemoteAddress
+		
+		If (Bound) Then
+			Self.Connection = HostSocket
+		Endif
+		
 		' Tell our parent what's going on.
-		Local Response:= Parent.OnServerBound(Self, Port, Bound)
+		Local Response:= Parent.OnServerBound(Self, Self.Port, Bound)
 		
 		If (Not Bound) Then
 			Return
 		Endif
-		
-		Self.Connection = HostSocket
 		
 		' Check if our parent wants us to accept "clients" initially.
 		If (Response) Then
@@ -116,12 +117,8 @@ Class Server Extends NetManager<ServerApplication> Implements IOnBindComplete, I
 	End
 	
 	Method OnAcceptComplete:Void(NewConnection:Socket, Source:Socket)
-		If (Connection <> Self.Connection) Then
-			Return
-		Endif
-		
-		' Ask our parent if we should continue accepting "clients" (If available. - 'NetUserHandles').
-		If (Parent.OnServerUserAccepted(Self, New NetUserHandle(NewConnection))) Then
+		' Ask our parent if we should continue accepting "clients" (If available. - 'NetworkUsers').
+		If (Parent.OnServerUserAccepted(Self, Represent(NewConnection))) Then
 			' Our parent said yes, accept more.
 			AcceptClients()
 		Endif

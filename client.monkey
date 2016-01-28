@@ -3,7 +3,7 @@ Strict
 Public
 
 ' Imports (Public):
-Import netmanager
+Import core
 Import packet
 Import user
 
@@ -25,19 +25,19 @@ End
 ' Classes:
 
 ' This is used to connect to a 'Server'; not to be confused with 'NetHandle'.
-Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete ' Final
+Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComplete ' Final
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin'.
-	Method New(Hostname:String, Port:Int, Parent:ClientApplication, PacketPoolSize:Int=Defaulk_PacketPoolSize)
-		Super.New(Parent, PacketPoolSize)
+	Method New(Hostname:String, Port:Int, Parent:ClientApplication, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(Parent, PacketSize, PacketPoolSize)
 		
 		Begin(Hostname, Port)
 	End
 	
 	' This overload does not call 'Begin'.
-	Method New(Parent:ClientApplication, PacketPoolSize:Int=Defaulk_PacketPoolSize)
-		Super.New(Parent, PacketPoolSize)
+	Method New(Parent:ClientApplication, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+		Super.New(Parent, PacketSize, PacketPoolSize)
 	End
 	
 	' Destructor(s):
@@ -51,7 +51,6 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	
 	' This connects to a remote 'Server' using 'Hostname' and 'Port' over 'Protocol'.
 	Method Begin:Void(Hostname:String, RemotePort:Int, Protocol:String="stream")
-		' Set the internal port. (Done first for safety)
 		Port = RemotePort
 		
 		' Allocate a 'Socket' using 'Protocol'.
@@ -59,7 +58,7 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 		
 		' Attempt to connect to 'Hostname' using 'Port'.
 		' If this is successful, 'S' will become 'Connection'.
-		S.ConnectAsync(Hostname, Port, Self)
+		S.ConnectAsync(Hostname, RemotePort, Self)
 		
 		Return
 	End
@@ -95,15 +94,15 @@ Class Client Extends NetManager<ClientApplication> Implements IOnConnectComplete
 	Protected
 	
 	Method OnConnectComplete:Void(Success:Bool, ClientSocket:Socket)
+		If (Success) Then
+			Self.Connection = ClientSocket
+		Endif
+		
 		' Tell our parent what's going on.
 		Local Response:= Parent.OnClientBound(Self, Port, Success)
 		
-		If (Success) Then
-			Self.Connection = ClientSocket
-			
-			If (Response) Then
-				AcceptMessages()
-			Endif
+		If (Success And Response) Then
+			AcceptMessages()
 		Endif
 		
 		Return
