@@ -9,7 +9,7 @@ Public
 ' Imports:
 Import mojo
 
-Import regal.rawnetworking
+Import regal.transport
 
 ' Classes:
 Class Application Extends App Implements ServerApplication, ClientApplication Final
@@ -94,6 +94,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 							C.Send(P)
 						Next
 					Endif
+					
+					Host.Free(P)
 					
 					SendFromHost = Not SendFromHost
 				Endif
