@@ -94,15 +94,19 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	Protected
 	
 	Method OnConnectComplete:Void(Success:Bool, ClientSocket:Socket)
-		If (Success) Then
-			Self.Connection = ClientSocket
-		Endif
+		Self.Connection = ClientSocket
 		
 		' Tell our parent what's going on.
 		Local Response:= Parent.OnClientBound(Self, Port, Success)
 		
-		If (Success And Response) Then
-			AcceptMessages()
+		If (Success) Then
+			If (Response) Then
+				AcceptMessages()
+			Endif
+		Else
+			Close()
+			
+			Return
 		Endif
 		
 		Return

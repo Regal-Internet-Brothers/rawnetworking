@@ -20,7 +20,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' This will be the remote-port we use to host our server.
 	' This is also what we when our clients are connecting.
-	Const PORT:= 27015 ' Server.PORT_AUTO ' 5029
+	Const PORT:= Server.PORT_AUTO ' 5029
 	
 	' Constructor(s):
 	Method OnCreate:Int()
@@ -29,8 +29,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		CreateContainers()
 		
-		' Start our server.
-		Host = New Server(PORT, Self) ' Server.PORT_AUTO
+		OpeningServer = False
+		SendFromHost = False
 		
 		Return 0
 	End
@@ -63,16 +63,41 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		UpdateAsyncEvents()
 		
-		Local Character:= GetChar()
-		
-		If (Character > 32) Then
-			For Local U:= Eachin Users
-				Local P:= Host.AllocatePacket()
+		If (KeyHit(KEY_F1)) Then
+			' Start our server.
+			Host = New Server(PORT, Self) ' Server.PORT_AUTO
+			
+			OpeningServer = True
+		Elseif (Host <> Null And Host.IsOpen) Then
+			If (KeyHit(KEY_F2)) Then
+				Print("Adding a client...")
 				
-				P.WriteLine("Key pressed: " + Character + " ('" + String.FromChar(Character) + "')")
+				AddClient()
+			Else
+				Local Character:= GetChar()
 				
-				Host.Send(P, U)
-			Next
+				If (Character > 32) Then
+					Local P:= Host.AllocatePacket()
+					
+					P.WriteString("Key pressed: " + Character + ": '" + String.FromChar(Character) + "'")
+					
+					If (SendFromHost) Then
+						P.WriteLine(" FROM: SERVER")
+						
+						For Local U:= Eachin Users
+							Host.Send(P, U)
+						Next
+					Else
+						P.WriteLine(" FROM: CLIENT")
+						
+						For Local C:= Eachin Clients
+							C.Send(P)
+						Next
+					Endif
+					
+					SendFromHost = Not SendFromHost
+				Endif
+			Endif
 		Endif
 		
 		Return 0
@@ -81,9 +106,56 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	Method OnRender:Int()
 		Cls()
 		
-		DrawText("Hello world.", 16.0, 16.0)
+		If (Host = Null Or Not Host.IsOpen) Then
+			If (Not OpeningServer) Then
+				DrawText("Press F1 to host a server.", 16.0, 16.0)
+			Else
+				DrawText("Opening server, please wait...", 16.0, 16.0)
+			Endif
+		Else
+			' Get the height of the current font.
+			Local FHeight:= FontHeight()
+			Local DW:= Float(DeviceWidth())
+			Local DH:= Float(DeviceHeight())
+			
+			' Debug information:
+			PushMatrix()
+			
+			Translate(16.0, 16.0)
+			DrawText("Press keys on your keyboard to send messages. (" + Int(SendFromHost) + ")", 0.0, 0.0)
+			Translate(0.0, FHeight)
+			DrawText("Press F2 to add a client.", 0.0, 0.0)
+			
+			PopMatrix()
+			
+			' Message display:
+			PushMatrix()
+			
+			Translate(DW / 2.0, DH / 2.0)
+			Scale(2.5, 2.5)
+			
+			DrawText("Latest message:", 0.0, -(FHeight * 2.0), 0.5, 0.5)
+			DrawText(LatestMessage, 0.0, 0.0, 0.5, 0.5)
+			
+			PopMatrix()
+			
+			' Client count:
+			PushMatrix()
+			
+			DrawText("Clients connected: " + Clients.Count(), DW - 16.0, 16.0, 1.0, 0.0)
+			
+			PopMatrix()
+		Endif
 		
 		Return 0
+	End
+	
+	Method AddClient:Client()
+		Local C:= New Client(ADDRESS, Host.Port, Self)
+		
+		Clients.AddLast(C)
+		
+		Return C
 	End
 	
 	' Methods (Protected):
@@ -94,10 +166,19 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		Return False ' True
 	End
 	
-	Method OnPacketReceived:Void(Data:Packet, From:NetworkUser)
-		Print("Message received. (" + Data.Length + " bytes)")
-		Print("Message contents:")
-		Print(Data.ReadLine())
+	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		Print("Message received. (" + Length + " bytes)")
+		
+		Local Message:= Data.ReadLine()
+		
+		If (Message = LatestMessage) Then
+			Print("Message is the same as the last one.")
+		Else
+			Print("Message contents:")
+			Print(LatestMessage)
+			
+			LatestMessage = Message
+		Endif
 		
 		Return
 	End
@@ -112,6 +193,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' This is called when a server is attempting to bind a socket.
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
+		OpeningServer = False
+		
 		If (Not Response) Then
 			Print("Failed to bound server socket on port " + Port + ".")
 			
@@ -122,7 +205,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		Print("Attempting to connect a 'Client'...")
 		
-		Clients.AddLast(New Client(ADDRESS, Host.Port, Self))
+		AddClient()
 		
 		' Tell 'Host' to start accepting users.
 		Return True
@@ -162,6 +245,13 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' A listo of 'NetworkUsers' connected to 'Host'.
 	Field Users:List<NetworkUser>
+	
+	' This is used to hold the latest message on the screen.
+	Field LatestMessage:String
+	
+	' Booleans / Flags:
+	Field OpeningServer:Bool
+	Field SendFromHost:Bool
 End
 
 ' Functions:

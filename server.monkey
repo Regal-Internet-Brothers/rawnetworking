@@ -106,6 +106,8 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 		Local Response:= Parent.OnServerBound(Self, Self.Port, Bound)
 		
 		If (Not Bound) Then
+			Close()
+			
 			Return
 		Endif
 		

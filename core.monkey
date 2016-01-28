@@ -19,7 +19,7 @@ Public
 Interface NetApplication
 	' Methods:
 	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
-	Method OnPacketReceived:Void(Data:Packet, From:NetworkUser)
+	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
 	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
 End
 
@@ -67,7 +67,7 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	Method RawSendPacketTo:Int(S:Socket, P:Packet)
 		' Since we're not using asynchronous behavior,
 		' we don't need to mark this 'Packet' object.
-		Return S.Send(P.Data, P.Offset, P.Length)
+		Return S.Send(P.Data, P.Offset, P.Position) ' 'P.Length'
 	End
 	
 	Method RawSendPacketToAsync:Void(S:Socket, P:Packet)
@@ -75,7 +75,7 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		MarkTransmission(P)
 		
 		' Send 'P' to 'S' asynchronously.
-		S.SendAsync(P.Data, P.Offset, P.Length, Self)
+		S.SendAsync(P.Data, P.Offset, P.Position, Self) ' 'P.Length'
 		
 		Return
 	End
@@ -127,15 +127,11 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	End
 	
 	Method OnReceiveComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
-		If (Source <> Connection) Then
-			Return
-		Endif
-		
 		If (IsOpen) Then
 			Local P:= GetTransmission(Data, False)
 			
 			If (P <> Null) Then
-				Parent.OnPacketReceived(P, Represent(Source))
+				Parent.OnPacketReceived(P, Count, Represent(Source))
 				
 				' Start receiving again. (Do not mark this packet again)
 				AcceptMessagesWith(Source, P, False)
