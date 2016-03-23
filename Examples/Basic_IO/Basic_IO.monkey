@@ -175,13 +175,27 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		If (Length <= 0) Then
 			Print("Client disconnected: " + From.Address.ToString())
 			
+			Local IsUser:Bool = False
+			
 			For Local U:= Eachin Users
 				If (From.Equals(U)) Then
 					Users.RemoveEach(U)
 					
+					IsUser = True
+					
 					Exit
 				Endif
 			Next
+			
+			If (Not IsUser) Then
+				If (Not Clients.IsEmpty()) Then
+					For Local C:= Eachin Clients
+						C.Close()
+					Next
+					
+					Clients.Clear()
+				Endif
+			Endif
 			
 			Return
 		Endif

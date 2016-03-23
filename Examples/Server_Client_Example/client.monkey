@@ -58,16 +58,24 @@ Class ClientExample Extends App Implements ClientApplication
 	End
 	
 	' Callbacks:
+	
+	' The return-value of this method indicates that 'regal.transport' should start receiving.
 	Method OnClientBound:Bool(C:Client, Port:Int, Response:Bool)
+		' Check if we were able to make a connection:
 		If (Not Response) Then
+			' We failed to connect, raise a runtime error.
 			Error("Unable to connect to the remote host.")
 		Endif
+		
+		' Tell the user the good news.
+		Print("Connected to the server at: " + Port)
 		
 		' Tell 'regal.transport' to start receiving.
 		Return True
 	End
 	
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		' 
 		Print("Received a message from the server:")
 		
 		While (Not Data.Eof())
@@ -79,10 +87,18 @@ Class ClientExample Extends App Implements ClientApplication
 	
 	' Miscellaneous:
 	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
+		' This is called to confirm that 'NewParent' is a suitable replacement for this object.
+		' This is currently a placeholder, and as such has no bearing on any current behavior.
+		
+		' Deny any kind of ownership change.
 		Return False
 	End
 	
 	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
+		' This is used for unidentified packets.
+		' In general, this isn't going to be called 
+		' unless you're messing with raw sockets.
+		
 		Return
 	End
 End 
