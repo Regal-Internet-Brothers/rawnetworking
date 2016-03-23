@@ -171,35 +171,31 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		Return False ' True
 	End
 	
-	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
-		If (Length <= 0) Then
-			Print("Client disconnected: " + From.Address.ToString())
-			
-			Local IsUser:Bool = False
-			
-			For Local U:= Eachin Users
-				If (From.Equals(U)) Then
-					Users.RemoveEach(U)
-					
-					IsUser = True
-					
-					Exit
-				Endif
-			Next
-			
-			If (Not IsUser) Then
-				If (Not Clients.IsEmpty()) Then
-					For Local C:= Eachin Clients
-						C.Close()
-					Next
-					
-					Clients.Clear()
-				Endif
+	' This is called when a "user" disconnects from a 'Server'.
+	Method OnDisconnection:Void(Host:Server, User:NetworkUser)
+		For Local U:= Eachin Users
+			If (From.Equals(U)) Then
+				Users.RemoveEach(U)
+				
+				Exit
 			Endif
-			
-			Return
-		Endif
+		Next
 		
+		Return
+	End
+	
+	' This is called when a 'Client' is disconnected from a remote server.
+	Method OnClientDisconnected:Void(C:Client)
+		C.Close()
+		
+		Clients.RemoveEach(C)
+		
+		Print("Client eliminated.")
+		
+		Return
+	End
+	
+	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
 		Print("Message received. (" + Length + " bytes)")
 		
 		Local Message:= Data.ReadLine()

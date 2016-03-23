@@ -20,6 +20,9 @@ Interface ClientApplication Extends NetApplication
 	
 	' The return-value indicates if 'C' should start receiving messages.
 	Method OnClientBound:Bool(C:Client, Port:Int, Response:Bool)
+	
+	' This is called when a client is disconnected from a 'Server'.
+	Method OnClientDisconnected:Void(C:Client)
 End
 
 ' Classes:

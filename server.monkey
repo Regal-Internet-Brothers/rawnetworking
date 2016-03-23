@@ -21,6 +21,9 @@ Interface ServerApplication Extends NetApplication
 	' The return-value of this method indicates if the server should start accepting "clients" ('NetworkUsers').
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 	
+	' This is called when a "user" disconnects from a 'Server'.
+	Method OnDisconnection:Void(Host:Server, User:NetworkUser)
+	
 	' The return-value indicates if more "clients" should be accepted.
 	Method OnServerUserAccepted:Bool(Host:Server, User:NetworkUser)
 End

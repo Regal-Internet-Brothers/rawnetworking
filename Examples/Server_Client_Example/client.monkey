@@ -59,6 +59,17 @@ Class ClientExample Extends App Implements ClientApplication
 	
 	' Callbacks:
 	
+	' This is called when a new message is received.
+	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		Print("Received a message from the server:")
+		
+		While (Not Data.Eof())
+			Print(Data.ReadLine())
+		Wend
+		
+		Return
+	End
+	
 	' The return-value of this method indicates that 'regal.transport' should start receiving.
 	Method OnClientBound:Bool(C:Client, Port:Int, Response:Bool)
 		' Check if we were able to make a connection:
@@ -74,13 +85,15 @@ Class ClientExample Extends App Implements ClientApplication
 		Return True
 	End
 	
-	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
-		' 
-		Print("Received a message from the server:")
+	Method OnClientDisconnected:Void(C:Client)
+		Print("Disconnected from the server.")
 		
-		While (Not Data.Eof())
-			Print(Data.ReadLine())
-		Wend
+		' Close our connection formally.
+		Connection.Close(); Connection = Null
+		
+		' This is where we could tell the user the bad news.
+		' If not, this example will go back to its default state.
+		'Error("Disconnected from the server: Unable to continue.")
 		
 		Return
 	End

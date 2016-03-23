@@ -59,26 +59,29 @@ Class ServerExample Extends App Implements ServerApplication
 	End
 	
 	' Callbacks:
+	
+	' This is called when a new message is received.
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
-		If (Length <= 0) Then
-			Print("Client disconnected: " + From.Address.ToString())
-			
-			For Local U:= Eachin Users
-				If (From.Equals(U)) Then
-					Users.RemoveEach(U)
-					
-					Exit
-				Endif
-			Next
-			
-			Return
-		Endif
-		
 		Print("Received a message from a client (" + From.Address.ToString() + ") {" + Length + "}:")
 		
 		While (Not Data.Eof())
 			Print(Data.ReadLine())
 		Wend
+		
+		Return
+	End
+	
+	' This is called when a "user" disconnects from a 'Server'.
+	Method OnDisconnection:Void(Host:Server, User:NetworkUser)
+		Print("Client disconnected: " + From.Address.ToString())
+		
+		For Local U:= Eachin Users
+			If (From.Equals(U)) Then
+				Users.RemoveEach(U)
+				
+				Exit
+			Endif
+		Next
 		
 		Return
 	End
