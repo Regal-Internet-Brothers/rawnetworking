@@ -2,7 +2,7 @@
 
 ## Description
 
-A low-level networking module meant to abstract internet transport behavior, but not protocol behavior. This is in contrast to '[regal.networking](https://github.com/Regal-Internet-Brothers/networking)', which handles higher-level concepts like clients, connections and disconnections, and packet reliability to name a few.
+A low-level networking module for the [Monkey programming language](https://github.com/blitz-research/monkey), meant to abstract internet transport behavior, but not protocol behavior. This is in contrast to '[regal.networking](https://github.com/Regal-Internet-Brothers/networking)', which handles things like higher-level concepts like clients, connections and disconnections, and packet reliability. This is not that module, and is in no way directly compatible.
 
 The '[regal.networking](https://github.com/Regal-Internet-Brothers/networking)' module is tightly connected to the rest of [the 'regal' modules](https://github.com/Regal-Internet-Brothers/regal-modules), this is not. Everything supplied here is based on the 'brl' modules, and related technologies.
 
