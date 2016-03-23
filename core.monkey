@@ -11,6 +11,7 @@ Import user
 Private
 
 Import brl.socket
+Import brl.stream
 Import brl.databuffer
 
 Public
@@ -21,6 +22,11 @@ Interface NetApplication
 	Method CanSwitchParent:Bool(CurrentParent:NetApplication, NewParent:NetApplication)
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
 	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
+End
+
+' Functions:
+Function EndOfPacket:Bool(P:Stream, Length:Int)
+	Return (P.Eof() Or (P.Position >= Length))
 End
 
 ' Classes:

@@ -8,6 +8,9 @@ Public
 ' to behave while the application isn't in focus.
 #MOJO_AUTO_SUSPEND_ENABLED = False
 
+' Disable filtering to make the font clearer.
+#MOJO_IMAGE_FILTERING_ENABLED = False
+
 ' Imports:
 Import mojo
 
@@ -18,43 +21,190 @@ Import regal.transport
 ' Classes:
 Class ServerExample Extends App Implements ServerApplication
 	' Constant variable(s):
+	
+	' This port can be anything you want it to be,
+	' as long as any clients connect using the same port.
 	Const PORT:Int = 27015
 	
+	' Enable this if you want to use asynchronous sending.
+	Const USE_ASYNC_SEND:Bool = True ' False
+	
 	' Fields:
+	
+	#Rem
+		This will act as our server that we can use to communicate with 'Clients'.
+		These 'Clients' are represented by 'NetworkUser' handles, rather than actual 'Client' objects.
+		
+		Basically, 'Client' objects are used to connect to 'Server' objects, and
+		'NetworkUser' objects are used to identify 'Clients' on the server's end.
+	#End
+	
 	Field Connection:Server
 	
+	' This is what we'll use to keep track of connected clients ('NetworkUsers').
 	Field Users:List<NetworkUser>
+	
+	' This will be used to hold the last message we received.
+	Field CurrentMessage:String = "Waiting..."
 	
 	' Constructor(s):
 	Method OnCreate:Int()
+		' Set the update-rate of the application.
 		SetUpdateRate(0) ' 60 ' 30
 		
+		' We'll be allocating our container(s) ahead of time.
 		Users = New List<NetworkUser>()
 		
+		' Return the default response.
 		Return 0
 	End
 	
 	' Methods:
 	Method OnUpdate:Int()
+		#Rem
+			Update all asynchronous behavior.
+			
+			This is important, as all asynchronous routines used
+			in 'regal.transport' required this to be called periodically.
+			
+			Several other modules require this as well,
+			so it's a good idea to call this function.
+			
+			This function can be imported via 'brl.asyncevent'.
+		#End
+		
 		UpdateAsyncEvents()
 		
+		' Check if we've started a connection or not:
 		If (Connection = Null) Then
+			' Check if the user pressed F1:
 			If (KeyHit(KEY_F1)) Then
-				' Attempt to host using the port described by 'PORT'.
+				Print("Hosting a server on port: " + PORT)
+				
+				' Attempt to host using the port described by 'PORT' (Found above).
 				Connection = New Server(PORT, Self)
+				
+				' From here, we wait until the appropriate callback is activated.
+			Endif
+		Else
+			' Wait until our connection is considered "open" to proceed:
+			If (Connection.IsOpen) Then
+				' Execute 'WhileConnected' now that we're actually connected.
+				WhileConnected()
 			Endif
 		Endif
 		
+		' Return the default response.
 		Return 0
 	End
 	
+	' This is called from 'OnUpdate' in this example.
+	Method WhileConnected:Void()
+		' Get the user's keyboard input.
+		Local Character:= GetChar()
+		
+		' Check if it's a valid character:
+		If (Character > 32) Then
+			Local Message:String
+			
+			' Generate a string-representation of the user's input.
+			Message = String.FromChar(Character)
+			
+			' Check if we're sending asynchronously:
+			If (USE_ASYNC_SEND) Then
+				' Enumerate all connected users:
+				For Local U:= Eachin Users
+					Local P:Packet = Connection.AllocatePacket()
+					
+					' Write the user's message.
+					P.WriteLine(Message)
+					
+					#Rem
+						Send asynchronously to the user.
+						
+						By sending asynchronously, you are giving up all
+						control over 'P' (The described 'Packet' object).
+						
+						Because of this behavior, you should NOT call the
+						'Connection' object's 'Free' method on this 'Packet'.
+						
+						Doing this will result in undefined behavior.
+						
+						The 'Packet' object passed to 'SendAsync' will
+						be automatically released when appropriate.
+					#End
+					
+					Connection.SendAsync(P, U)
+				Next
+			Else
+				' Allocate a packet handle.
+				Local P:= Connection.AllocatePacket()
+				
+				' Write the user's message.
+				P.WriteLine(Message)
+				
+				' Enumerate all connected users:
+				For Local U:= Eachin Users
+					' Send our packet-data to each user.
+					Connection.Send(P, U)
+				Next
+				
+				' Release our packet handle, so the
+				' object may be reused in the future.
+				Connection.Free(P)
+			Endif
+		Endif
+		
+		Return
+	End
+	
 	Method OnRender:Int()
+		' Constant variable(s):
+		
+		' Thes will be used to draw text appropriately:
+		Const TextScale:Float = 4.0
+		Const HalfTextScale:= (TextScale / 2.0)
+		
+		' Clear the screen.
 		Cls()
 		
 		If (Connection = Null) Then
-			DrawText("Press F1 to host the server (" + PORT + ")", 8.0, 8.0)
+			' Tell the player to press F1 to continue.
+			DrawText("Press F1 to host a server (" + PORT + ")", 8.0, 8.0)
+		Else
+			If (Connection.IsOpen) Then
+				' Tell the user they can send messages.
+				DrawText("Press any key to send a message to connected users.", 8.0, 8.0)
+				
+				' Draw the message and related graphics to the screen:
+				PushMatrix()
+				
+				Translate(Float(DeviceWidth() / 2), Float(DeviceHeight() / 2))
+				
+				Scale(TextScale, TextScale)
+				
+				DrawText("Message:", 0.0, ((-(FontHeight() / 2))*TextScale), 0.5, 0.5)
+				
+				DrawText(CurrentMessage, 0.0, 0.0, 0.5, 0.5)
+				
+				PopMatrix()
+				
+				DrawText("Connected users: " + Users.Count(), 8.0, DeviceHeight()-8.0, 0.0, 0.5)
+			Else
+				' Tell the user what's going on:
+				PushMatrix()
+				
+				Translate(Float(DeviceWidth() / 2), Float(DeviceHeight() / 2))
+				
+				Scale(HalfTextScale, HalfTextScale)
+				
+				DrawText("Waiting for the server to open...", 0.0, 0.0, 0.5, 0.5)
+				
+				PopMatrix()
+			Endif
 		Endif
 		
+		' Return the default response.
 		Return 0
 	End
 	
@@ -64,9 +214,23 @@ Class ServerExample Extends App Implements ServerApplication
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
 		Print("Received a message from a client (" + From.Address.ToString() + ") {" + Length + "}:")
 		
-		While (Not Data.Eof())
-			Print(Data.ReadLine())
-		Wend
+		If (Not EndOfPacket(Data, Length)) Then
+			' Read the first line.
+			CurrentMessage = Data.ReadLine()
+			
+			Print("Message: " + CurrentMessage)
+			
+			' Check if there's anything left:
+			If (Not EndOfPacket(Data, Length)) Then
+				Print("")
+				Print("Extra lines:")
+				
+				' Any other lines will be output to the console:
+				While (Not EndOfPacket(Data, Length))
+					Print(Data.ReadLine())
+				Wend
+			Endif
+		Endif
 		
 		Return
 	End
@@ -127,7 +291,7 @@ Class ServerExample Extends App Implements ServerApplication
 	
 	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
 		' This is used for unidentified packets.
-		' In general, this isn't going to be called 
+		' In general, this isn't going to be called
 		' unless you're messing with raw sockets.
 		
 		Return
@@ -136,7 +300,9 @@ End
 
 ' Functions:
 Function Main:Int()
+	' Start the application.
 	New ServerExample()
 	
+	' Return the default response.
 	Return 0
 End

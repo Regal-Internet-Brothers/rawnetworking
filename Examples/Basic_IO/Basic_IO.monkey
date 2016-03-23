@@ -9,6 +9,9 @@ Public
 ' to behave while the application isn't in focus.
 #MOJO_AUTO_SUSPEND_ENABLED = False
 
+' Disable filtering to make the font clearer.
+#MOJO_IMAGE_FILTERING_ENABLED = False
+
 ' Imports:
 Import mojo
 
