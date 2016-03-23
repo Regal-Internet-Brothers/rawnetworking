@@ -4,6 +4,9 @@ Public
 
 ' Preprocessor related:
 '#GLFW_USE_MINGW = False
+
+' Make sure to disable this if you want networking functionality
+' to behave while the application isn't in focus.
 #MOJO_AUTO_SUSPEND_ENABLED = False
 
 ' Imports:
@@ -245,7 +248,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	' A list of 'Clients' that have established a connection to 'Host'.
 	Field Clients:List<Client>
 	
-	' A listo of 'NetworkUsers' connected to 'Host'.
+	' A list of 'NetworkUsers' connected to 'Host'.
 	Field Users:List<NetworkUser>
 	
 	' This is used to hold the latest message on the screen.

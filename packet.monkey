@@ -32,7 +32,7 @@ Class Packet Extends DataStream Final
 	End
 	
 	Method Close:Void()
-		DebugStop()
+		'DebugStop()
 		
 		Data.Discard()
 		

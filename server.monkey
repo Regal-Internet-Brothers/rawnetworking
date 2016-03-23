@@ -18,7 +18,7 @@ Public
 Interface ServerApplication Extends NetApplication
 	' Methods:
 	
-	' The return-value of this methods indicates if the server should start accepting "clients" ('NetworkUsers').
+	' The return-value of this method indicates if the server should start accepting "clients" ('NetworkUsers').
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 	
 	' The return-value indicates if more "clients" should be accepted.
