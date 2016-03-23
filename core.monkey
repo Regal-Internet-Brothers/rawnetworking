@@ -103,14 +103,14 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	End
 	
 	' This represents 'S' using a 'NetworkUser' object.
-	Method Represent:NetworkUser(S:Socket)
+	Method Represent:NetworkUser(S:Socket, ClosureRights:Bool=True)
 		' Not very efficient, but it works for now.
-		Return New NetworkUser(S, S.RemoteAddress)
+		Return New NetworkUser(S, S.RemoteAddress, ClosureRights)
 	End
 	
-	Method Represent:NetworkUser(S:Socket, Address:SocketAddress)
+	Method Represent:NetworkUser(S:Socket, Address:SocketAddress, ClosureRights:Bool=True)
 		' Once again, not very efficient, but it works for now.
-		Return New NetworkUser(S, Address)
+		Return New NetworkUser(S, Address, ClosureRights)
 	End
 	
 	' BRL:
@@ -131,19 +131,24 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 			Local P:= GetTransmission(Data, False)
 			
 			If (P <> Null) Then
-				Parent.OnPacketReceived(P, Count, Represent(Source))
+				Parent.OnPacketReceived(P, Count, Represent(Source, IsTCPSocket))
 				
-				' Start receiving again. (Do not mark this packet again)
-				AcceptMessagesWith(Source, P, False)
+				' Make sure we don't endlessly keep trying when we failed last time:
+				If (Count > 0) Then
+					' Start receiving again. (Do not mark this packet again)
+					AcceptMessagesWith(Source, P, False)
+				Endif
 			Else
 				Parent.OnUnknownPacket(Data, Offset, Count)
+				
+				Return
 			Endif
-		Else
-			' Kill the transmission, and if we don't
-			' recognize the enclosed data, throw it out.
-			' This behavior may change in the future.
-			KillTransmission(Data, True)
 		Endif
+		
+		' Kill the transmission, and if we don't
+		' recognize the enclosed data, throw it out.
+		' This behavior may change in the future.
+		KillTransmission(Data, True)
 	End
 	
 	Public
@@ -159,6 +164,11 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	
 	Method IsOpen:Bool() Property
 		Return (Connection <> Null)
+	End
+	
+	Method IsTCPSocket:Bool() Property
+		' UDP is not currently supported.
+		Return True
 	End
 	
 	' Properties (Protected):

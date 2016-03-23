@@ -33,14 +33,30 @@ Class NetworkUser ' Final
 	' to contact the entity this object represents.
 	' The 'Address' argument is only technically required
 	' for UDP, but is supplied regardless. (May or may not be 'Null')
-	Method New(Connection:Socket, Address:SocketAddress)
+	Method New(Connection:Socket, Address:SocketAddress, ClosureRights:Bool=False)
 		Self.Connection = Connection
 		Self.Address = Address
+		
+		Self.ClosureRights = ClosureRights
 	End
 	
-	Method New(Connection:Socket)
+	Method New(Connection:Socket, ClosureRights:Bool=True)
 		Self.Connection = Connection
 		Self.Address = Connection.RemoteAddress
+		
+		Self.ClosureRights = ClosureRights
+	End
+	
+	' Destructor(s):
+	Method Free:Void(CloseConnection:Bool=True)
+		If (CloseConnection And ClosureRights) Then
+			Self.Connection.Close()
+		Endif
+		
+		Self.Connection = Null
+		Self.Address = Null
+		
+		Return
 	End
 	
 	' Methods:
@@ -55,6 +71,10 @@ Class NetworkUser ' Final
 	
 	Method Address:SocketAddress() Property
 		Return Self._Address
+	End
+	
+	Method ClosureRights:Bool() Property
+		Return Self._ClosureRights
 	End
 	
 	' Properties (Protected):
@@ -72,6 +92,12 @@ Class NetworkUser ' Final
 		Return
 	End
 	
+	Method ClosureRights:Void(Input:Bool) Property
+		Self._ClosureRights = Input
+		
+		Return
+	End
+	
 	Public
 	
 	' Fields (Protected):
@@ -79,6 +105,9 @@ Class NetworkUser ' Final
 	
 	Field _Connection:Socket
 	Field _Address:SocketAddress
+	
+	' Booleans / Flags:
+	Field _ClosureRights:Bool
 	
 	Public
 End

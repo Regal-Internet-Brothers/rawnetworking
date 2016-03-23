@@ -172,6 +172,20 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	End
 	
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		If (Length <= 0) Then
+			Print("Client disconnected: " + From.Address.ToString())
+			
+			For Local U:= Eachin Users
+				If (From.Equals(U)) Then
+					Users.RemoveEach(U)
+					
+					Exit
+				Endif
+			Next
+			
+			Return
+		Endif
+		
 		Print("Message received. (" + Length + " bytes)")
 		
 		Local Message:= Data.ReadLine()

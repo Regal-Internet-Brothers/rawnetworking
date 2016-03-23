@@ -120,7 +120,7 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	
 	Method OnAcceptComplete:Void(NewConnection:Socket, Source:Socket)
 		' Ask our parent if we should continue accepting "clients" (If available. - 'NetworkUsers').
-		If (Parent.OnServerUserAccepted(Self, Represent(NewConnection))) Then
+		If (Parent.OnServerUserAccepted(Self, Represent(NewConnection, True))) Then
 			' Our parent said yes, accept more.
 			AcceptClients()
 		Endif
