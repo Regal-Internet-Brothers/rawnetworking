@@ -83,6 +83,10 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	' Methods (Protected):
 	Protected
 	
+	' Abstract:
+	Method OnDisconnectMessage:Void(Source:Socket) Abstract
+	
+	' Implemented:
 	Method AcceptMessagesWith:Bool(S:Socket)
 		Return AcceptMessagesWith(S, AllocatePacket())
 	End
@@ -131,24 +135,25 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 			Local P:= GetTransmission(Data, False)
 			
 			If (P <> Null) Then
-				Parent.OnPacketReceived(P, Count, Represent(Source, IsTCPSocket))
-				
-				' Make sure we don't endlessly keep trying when we failed last time:
 				If (Count > 0) Then
+					Parent.OnPacketReceived(P, Count, Represent(Source, IsTCPSocket))
+					
 					' Start receiving again. (Do not mark this packet again)
 					AcceptMessagesWith(Source, P, False)
+				Else
+					OnDisconnectMessage(Source)
 				Endif
 			Else
 				Parent.OnUnknownPacket(Data, Offset, Count)
-				
-				Return
 			Endif
+		Else
+			' Kill the transmission, and if we don't
+			' recognize the enclosed data, throw it out.
+			' This behavior may change in the future.
+			KillTransmission(Data, True)
 		Endif
 		
-		' Kill the transmission, and if we don't
-		' recognize the enclosed data, throw it out.
-		' This behavior may change in the future.
-		KillTransmission(Data, True)
+		Return
 	End
 	
 	Public

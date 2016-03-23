@@ -96,6 +96,14 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	' Methods (Protected):
 	Protected
 	
+	Method OnDisconnectMessage:Void(S:Socket) ' Final
+		' Notify the user.
+		Parent.OnClientDisconnected(Self)
+		
+		Return
+	End
+	
+	' BRL:
 	Method OnConnectComplete:Void(Success:Bool, ClientSocket:Socket)
 		Self.Connection = ClientSocket
 		

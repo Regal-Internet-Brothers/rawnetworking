@@ -73,11 +73,11 @@ Class ServerExample Extends App Implements ServerApplication
 	
 	' This is called when a "user" disconnects from a 'Server'.
 	Method OnDisconnection:Void(Host:Server, User:NetworkUser)
-		Print("Client disconnected: " + From.Address.ToString())
+		Print("User disconnected: " + User.Address.ToString())
 		
-		For Local U:= Eachin Users
-			If (From.Equals(U)) Then
-				Users.RemoveEach(U)
+		For Local LocalHandle:= Eachin Users
+			If (User.Equals(LocalHandle)) Then
+				Users.RemoveEach(LocalHandle)
 				
 				Exit
 			Endif

@@ -171,11 +171,30 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		Return False ' True
 	End
 	
+	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		Print("Message received. (" + Length + " bytes)")
+		
+		Local Message:= Data.ReadLine()
+		
+		If (Message = LatestMessage) Then
+			Print("Message is the same as the last one.")
+		Else
+			Print("Message contents:")
+			Print(LatestMessage)
+			
+			LatestMessage = Message
+		Endif
+		
+		Return
+	End
+	
 	' This is called when a "user" disconnects from a 'Server'.
 	Method OnDisconnection:Void(Host:Server, User:NetworkUser)
-		For Local U:= Eachin Users
-			If (From.Equals(U)) Then
-				Users.RemoveEach(U)
+		Print("User disconnected: " + User.Address.ToString())
+		
+		For Local LocalUser:= Eachin Users
+			If (User.Equals(LocalUser)) Then
+				Users.RemoveEach(LocalUser)
 				
 				Exit
 			Endif
@@ -195,25 +214,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		Return
 	End
 	
-	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
-		Print("Message received. (" + Length + " bytes)")
-		
-		Local Message:= Data.ReadLine()
-		
-		If (Message = LatestMessage) Then
-			Print("Message is the same as the last one.")
-		Else
-			Print("Message contents:")
-			Print(LatestMessage)
-			
-			LatestMessage = Message
-		Endif
-		
-		Return
-	End
-	
 	Method OnUnknownPacket:Void(UnknownData:DataBuffer, Offset:Int, Count:Int)
-		Print("Unknwon packet data found: " + Offset + ", {" + Count + "}")
+		Print("Unknown packet data found: " + Offset + ", {" + Count + "}")
 		
 		Return
 	End

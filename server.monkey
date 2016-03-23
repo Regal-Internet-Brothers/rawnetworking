@@ -98,6 +98,14 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	' Methods (Protected):
 	Protected
 	
+	Method OnDisconnectMessage:Void(S:Socket) ' Final
+		' Notify the user.
+		Parent.OnDisconnection(Self, Represent(S))
+		
+		Return
+	End
+	
+	' BRL:
 	Method OnBindComplete:Void(Bound:Bool, HostSocket:Socket)
 		Self.Port = HostSocket.LocalAddress.Port ' RemoteAddress
 		
