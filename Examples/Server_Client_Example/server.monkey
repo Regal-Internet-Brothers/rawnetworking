@@ -138,8 +138,6 @@ Class ServerExample Extends App Implements ServerApplication
 						be automatically released when appropriate.
 					#End
 					
-					DebugStop()
-					
 					Connection.SendAsync(P, U)
 				Next
 			Else

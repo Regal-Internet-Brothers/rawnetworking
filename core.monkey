@@ -123,8 +123,8 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	Method OnDisconnectMessage:Void(Source:Socket) Abstract
 	
 	' Implemented:
-	Method AcceptMessagesWith:Bool(S:Socket)
-		Return AcceptMessagesWith(S, AllocatePacket())
+	Method AcceptMessagesWith:Bool(S:Socket, Addr:SocketAddress=Null)
+		Return AcceptMessagesWith(S, AllocatePacket(), True, Addr)
 	End
 	
 	' If the 'MarkPacket' argument is set to 'False',
@@ -136,16 +136,11 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		
 		P.Reset()
 		
-		Select Protocol
-			Case TRANSPORT_PROTOCOL_TCP
-				S.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
-			Case TRANSPORT_PROTOCOL_UDP
-				If (Addr = Null) Then
-					Addr = New SocketAddress()
-				Endif
-				
-				S.ReceiveFromAsync(P.Data, P.Offset, P.Length, Addr, Self)
-		End Select
+		If (IsTCPSocket Or Addr = Null) Then
+			S.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
+		Else
+			S.ReceiveFromAsync(P.Data, P.Offset, P.Length, Addr, Self)
+		Endif
 		
 		' Return the default response.
 		Return True
@@ -176,13 +171,7 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	End
 	
 	Method OnSendToComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Addr:SocketAddress, Source:Socket)
-		If (Source <> Connection) Then
-			Return
-		Endif
-		
-		' Kill the transmission; finish the transmission, and if
-		' successful, give the associated 'Packet' object back.
-		KillTransmission(Data, False)
+		OnSendComplete(Data, Offset, Count, Source)
 		
 		Return
 	End

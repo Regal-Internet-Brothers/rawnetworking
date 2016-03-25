@@ -146,7 +146,7 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 					Return False
 				Endif
 				
-				AcceptMessagesWith(Connection)
+				AcceptMessagesWith(Connection, New SocketAddress())
 				
 				Accepting = True
 				
