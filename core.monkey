@@ -101,7 +101,7 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		Return S.SendTo(P.Data, P.Offset, P.Position, Addr) ' 'P.Length'
 	End
 	
-	Method RawSendPacketToAsync:Void(S:Socket, P:Packet, Addr:SocketAddress)
+	Method RawSendPacketToAsync:Void(S:Socket, Addr:SocketAddress, P:Packet)
 		' Mark 'P', so we can take care of it later.
 		MarkTransmission(P)
 		

@@ -74,23 +74,37 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 		Usage of this method is not safe unless 'IsOpen' is 'True'.
 	#End
 	
-	Method AcceptClients:Bool()
-		If (Accepting) Then
+	Method AcceptClients:Bool(Force:Bool=False)
+		If (Accepting And Not Force) Then
 			Return False
 		Endif
 		
 		Connection.AcceptAsync(Self)
+		
+		Accepting = True
 		
 		' Return the default response.
 		Return True
 	End
 	
 	Method Send:Int(P:Packet, U:NetworkUser)
-		Return RawSendPacketTo(U.Connection, P)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				Return RawSendPacketTo(U.Connection, P)
+			Case TRANSPORT_PROTOCOL_UDP
+				Return RawSendPacketTo(Connection, U.Address, P)
+		End Select
+		
+		Return 0
 	End
 	
 	Method SendAsync:Void(P:Packet, U:NetworkUser)
-		RawSendPacketToAsync(U.Connection, P)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				RawSendPacketToAsync(U.Connection, P)
+			Case TRANSPORT_PROTOCOL_UDP
+				RawSendPacketToAsync(Connection, U.Address, P)
+		End Select
 		
 		Return
 	End
@@ -133,7 +147,9 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 		' Ask our parent if we should continue accepting "clients" (If available. - 'NetworkUsers').
 		If (Parent.OnServerUserAccepted(Self, Represent(NewConnection, True))) Then
 			' Our parent said yes, accept more.
-			AcceptClients()
+			AcceptClients(True)
+		Else
+			Accepting = False
 		Endif
 		
 		' Start accepting messages from 'NewConnection'. (Remote user)
