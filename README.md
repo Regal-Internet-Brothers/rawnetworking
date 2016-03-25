@@ -6,6 +6,13 @@ A low-level networking module for the [Monkey programming language](https://gith
 
 The '[regal.networking](https://github.com/Regal-Internet-Brothers/networking)' module is tightly connected to the rest of [the 'regal' modules](https://github.com/Regal-Internet-Brothers/regal-modules), this is not. Everything supplied here is based on the 'brl' modules, and related technologies.
 
+## Installation
+This module is officially available from [the Regal Modules project](https://github.com/Regal-Internet-Brothers/regal-modules#regal-modules), and may be installed by following the installation guide provided with that distribution.
+
+Although this can be installed with the Regal Modules, this particular module aims to be as dependency free as possible. This means the only requirements this module has are covered by the ["standard library"](https://github.com/blitz-research/monkey/tree/develop/modules) provided with Monkey. This means this module may be used as a completely separate entity, without being tied to '[regal](https://github.com/Regal-Internet-Brothers/regal-modules)'.
+
+Import syntax varies with usage, with the official distribution using 'regal' as a parent namespace (e.g. regal.transport).
+
 ## Usage Notes
 
 * When communicating, please realize that data is as-is, meaning byte-order and other details are not accounted for.
