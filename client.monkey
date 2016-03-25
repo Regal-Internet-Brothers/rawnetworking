@@ -89,8 +89,8 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 		Return
 	End
 	
-	Method AcceptMessages:Bool()
-		If (AcceptingMessages) Then
+	Method AcceptMessages:Bool(Force:Bool=False)
+		If (AcceptingMessages And Not Force) Then
 			Return False
 		Endif
 		
@@ -106,8 +106,8 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 		Return False
 	End
 	
-	Method Accept:Bool()
-		Return AcceptMessages()
+	Method Accept:Bool(Force:Bool=False)
+		Return AcceptMessages(Force)
 	End
 	
 	Method Send:Int(P:Packet)

@@ -72,7 +72,7 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	' Methods (Public):
 	
 	' Abstract:
-	Method Accept:Bool() Abstract
+	Method Accept:Bool(Force:Bool=False) Abstract
 	
 	' Implemented:
 	
