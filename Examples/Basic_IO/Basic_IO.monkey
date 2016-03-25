@@ -30,7 +30,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	
 	' This describes the protocol used to transport data.
 	' This must be the same on both the server and clients' ends.
-	Const PROTOCOL:= TRANSPORT_PROTOCOL_UDP ' TRANSPORT_PROTOCOL_TCP
+	Const PROTOCOL:= TRANSPORT_PROTOCOL_TCP ' TRANSPORT_PROTOCOL_UDP
 	
 	' Constructor(s):
 	Method OnCreate:Int()
