@@ -75,10 +75,8 @@ Class ClientExample Extends App Implements ClientApplication
 			If (KeyHit(KEY_F1)) Then
 				Print("Connecting to the server at: (" + ADDRESS + " : " + PORT + ")")
 				
-				DebugStop()
-				
 				' Start connecting to a server at 'ADDRESS' on the port described by 'PORT'.
-				Connection = New Client(ADDRESS, PORT, Self)
+				Connection = New Client(ADDRESS, PORT, Self, PROTOCOL)
 				
 				' From here, we wait until the appropriate callback is activated.
 			Endif

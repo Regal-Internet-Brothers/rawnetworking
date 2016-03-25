@@ -43,10 +43,10 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	
 	Function GetProtocol:ProtocolType(Protocol:String)
 		Select Protocol
-			Case "stream"
-				Return TRANSPORT_PROTOCOL_TCP
 			Case "datagram"
 				Return TRANSPORT_PROTOCOL_UDP
+			Default ' Case "stream"
+				Return TRANSPORT_PROTOCOL_TCP
 		End Select
 	End
 	

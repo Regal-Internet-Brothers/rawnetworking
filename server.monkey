@@ -44,10 +44,10 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	
 	Function GetProtocol:ProtocolType(Protocol:String)
 		Select Protocol
-			Case "server"
-				Return TRANSPORT_PROTOCOL_TCP
 			Case "datagram"
 				Return TRANSPORT_PROTOCOL_UDP
+			Default ' Case "server"
+				Return TRANSPORT_PROTOCOL_TCP
 		End Select
 	End
 	
