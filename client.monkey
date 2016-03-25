@@ -29,13 +29,25 @@ End
 
 ' This is used to connect to a 'Server'; not to be confused with 'NetHandle'.
 Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComplete ' Final
+	' Functions:
+	Function GetProtocol:String(Protocol:ProtocolType)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				Return "stream"
+			Case TRANSPORT_PROTOCOL_UDP
+				Return "datagram"
+		End Select
+		
+		Return ""
+	End
+	
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin'.
 	Method New(Hostname:String, Port:Int, Parent:ClientApplication, Protocol:ProtocolType=TRANSPORT_PROTOCOL_TCP, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
 		Super.New(Parent, PacketSize, PacketPoolSize)
 		
-		Begin(Hostname, Port)
+		Begin(Hostname, Port, Protocol)
 	End
 	
 	' This overload does not call 'Begin'.
@@ -51,6 +63,11 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	End
 	
 	' Methods (Public):
+	Method Begin:Void(Hostname:String, RemotePort:Int, Protocol:ProtocolType)
+		Begin(Hostname, RemotePort, GetProtocol(Protocol))
+		
+		Return
+	End
 	
 	' This connects to a remote 'Server' using 'Hostname' and 'Port' over 'Protocol'.
 	Method Begin:Void(Hostname:String, RemotePort:Int, Protocol:String="stream")

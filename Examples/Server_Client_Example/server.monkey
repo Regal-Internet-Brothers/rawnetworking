@@ -27,6 +27,7 @@ Class ServerExample Extends App Implements ServerApplication
 	Const PORT:Int = 27015
 	
 	' This describes the protocol used to transport data.
+	' This must be the same on both the server and clients' ends.
 	Const PROTOCOL:= TRANSPORT_PROTOCOL_UDP ' TRANSPORT_PROTOCOL_TCP
 	
 	' Enable this if you want to use asynchronous sending.

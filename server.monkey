@@ -30,13 +30,25 @@ End
 
 ' Classes:
 Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplete, IOnAcceptComplete ' Final
+	' Functions:
+	Function GetProtocol:String(Protocol:ProtocolType)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				Return "server"
+			Case TRANSPORT_PROTOCOL_UDP
+				Return "datagram"
+		End Select
+		
+		Return ""
+	End
+	
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin' using 'Port'.
-	Method New(Port:Int, Parent:ServerApplication, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+	Method New(Port:Int, Parent:ServerApplication, Protocol:ProtocolType=TRANSPORT_PROTOCOL_TCP, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
 		Super.New(Parent, PacketSize, PacketPoolSize)
 		
-		Begin(Port)
+		Begin(Port, Protocol)
 	End
 	
 	' This overload does not call 'Begin'.
@@ -55,6 +67,12 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	End
 	
 	' Methods (Public):
+	Method Begin:Void(RemotePort:Int, Protocol:ProtocolType)
+		Begin(RemotePort, GetProtocol(Protocol))
+		
+		Return
+	End
+	
 	Method Begin:Void(RemotePort:Int, Protocol:String="server")
 		' Allocate a 'Socket' using 'Protocol'.
 		Local S:= New Socket(Protocol)
@@ -75,16 +93,21 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	#End
 	
 	Method AcceptClients:Bool(Force:Bool=False)
-		If (Accepting And Not Force) Then
-			Return False
-		Endif
-		
-		Connection.AcceptAsync(Self)
-		
-		Accepting = True
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				If (Accepting And Not Force) Then
+					Return False
+				Endif
+				
+				Connection.AcceptAsync(Self)
+				
+				Accepting = True
+				
+				Return True ' Accepting
+		End Select
 		
 		' Return the default response.
-		Return True
+		Return False
 	End
 	
 	Method Send:Int(P:Packet, U:NetworkUser)
@@ -114,7 +137,7 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	
 	Method OnDisconnectMessage:Void(S:Socket) ' Final
 		' Notify the user.
-		Parent.OnDisconnection(Self, Represent(S))
+		Parent.OnDisconnection(Self, Represent(S, IsTCPSocket))
 		
 		Return
 	End
