@@ -41,6 +41,15 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 		Return ""
 	End
 	
+	Function GetProtocol:ProtocolType(Protocol:String)
+		Select Protocol
+			Case "stream"
+				Return TRANSPORT_PROTOCOL_TCP
+			Case "datagram"
+				Return TRANSPORT_PROTOCOL_UDP
+		End Select
+	End
+	
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin'.
@@ -64,21 +73,18 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	
 	' Methods (Public):
 	Method Begin:Void(Hostname:String, RemotePort:Int, Protocol:ProtocolType)
-		Begin(Hostname, RemotePort, GetProtocol(Protocol))
+		Self.Protocol = Protocol
+		
+		RawBegin(Hostname, RemotePort, GetProtocol(Protocol))
 		
 		Return
 	End
 	
 	' This connects to a remote 'Server' using 'Hostname' and 'Port' over 'Protocol'.
 	Method Begin:Void(Hostname:String, RemotePort:Int, Protocol:String="stream")
-		Port = RemotePort
+		Self.Protocol = GetProtocol(Protocol)
 		
-		' Allocate a 'Socket' using 'Protocol'.
-		Local S:= New Socket(Protocol)
-		
-		' Attempt to connect to 'Hostname' using 'Port'.
-		' If this is successful, 'S' will become 'Connection'.
-		S.ConnectAsync(Hostname, RemotePort, Self)
+		RawBegin(Hostname, RemotePort, Protocol)
 		
 		Return
 	End
@@ -116,6 +122,19 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	Method OnDisconnectMessage:Void(S:Socket) ' Final
 		' Notify the user.
 		Parent.OnClientDisconnected(Self)
+		
+		Return
+	End
+	
+	Method RawBegin:Void(Hostname:String, RemotePort:Int, Protocol:String="stream")
+		Port = RemotePort
+		
+		' Allocate a 'Socket' using 'Protocol'.
+		Local S:= New Socket(Protocol)
+		
+		' Attempt to connect to 'Hostname' using 'Port'.
+		' If this is successful, 'S' will become 'Connection'.
+		S.ConnectAsync(Hostname, RemotePort, Self)
 		
 		Return
 	End

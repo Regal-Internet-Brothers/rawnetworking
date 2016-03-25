@@ -42,6 +42,15 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 		Return ""
 	End
 	
+	Function GetProtocol:ProtocolType(Protocol:String)
+		Select Protocol
+			Case "server"
+				Return TRANSPORT_PROTOCOL_TCP
+			Case "datagram"
+				Return TRANSPORT_PROTOCOL_UDP
+		End Select
+	End
+	
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin' using 'Port'.
@@ -68,18 +77,17 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	
 	' Methods (Public):
 	Method Begin:Void(RemotePort:Int, Protocol:ProtocolType)
-		Begin(RemotePort, GetProtocol(Protocol))
+		Self.Protocol = Protocol
+		
+		RawBegin(RemotePort, GetProtocol(Protocol))
 		
 		Return
 	End
 	
 	Method Begin:Void(RemotePort:Int, Protocol:String="server")
-		' Allocate a 'Socket' using 'Protocol'.
-		Local S:= New Socket(Protocol)
+		Self.Protocol = GetProtocol(Protocol)
 		
-		' Attempt to bind 'S'. If successful,
-		' 'S' will become 'Connection'.
-		S.BindAsync("", RemotePort, Self)
+		RawBegin(RemotePort, Protocol)
 		
 		Return
 	End
@@ -138,6 +146,17 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	Method OnDisconnectMessage:Void(S:Socket) ' Final
 		' Notify the user.
 		Parent.OnDisconnection(Self, Represent(S, IsTCPSocket))
+		
+		Return
+	End
+	
+	Method RawBegin:Void(RemotePort:Int, Protocol:String="server")
+		' Allocate a 'Socket' using 'Protocol'.
+		Local S:= New Socket(Protocol)
+		
+		' Attempt to bind 'S'. If successful,
+		' 'S' will become 'Connection'.
+		S.BindAsync("", RemotePort, Self)
 		
 		Return
 	End
