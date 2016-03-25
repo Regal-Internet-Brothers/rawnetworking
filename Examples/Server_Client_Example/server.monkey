@@ -28,7 +28,7 @@ Class ServerExample Extends App Implements ServerApplication
 	
 	' This describes the protocol used to transport data.
 	' This must be the same on both the server and clients' ends.
-	Const PROTOCOL:= TRANSPORT_PROTOCOL_UDP ' TRANSPORT_PROTOCOL_TCP
+	Const PROTOCOL:= TRANSPORT_PROTOCOL_TCP ' TRANSPORT_PROTOCOL_UDP
 	
 	' Enable this if you want to use asynchronous sending.
 	Const USE_ASYNC_SEND:Bool = True ' False
