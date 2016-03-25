@@ -15,3 +15,9 @@ The '[regal.networking](https://github.com/Regal-Internet-Brothers/networking)' 
 * Multi-target requirements are met internally, but must be upheld by users. Everything asynchronous in 'brl.socket' is used when possible. This means there's no implied discrepancies in this module.
 
 * Connected "users" are handled internally, but only for minimum behavior. They are not referenced directly, only through asynchronous bootstrapping. This means the 'NetUser' objects given to you are created on the spot, and should be managed by the programmer using this module.
+
+* When using the UDP protocol, communication is as-is, meaning that packets may or may not be received, and could be presented in any order. In contrast, TCP provides in-order packets and reliable messaging as a whole. Likewise, TCP supports connection and disconnection, where UDP does not, and will therefore need to be managed by the user.
+
+As a reminder, this is a multi-protocol API. Though you could maintain a solid codebase for several transport protocols using this, that's up to you. For a higher-level, but more comprehensive networking module, see '[regal.networking](https://github.com/Regal-Internet-Brothers/networking#networking)'.
+
+This module ('regal.transport') is meant for raw data I/O, meaning it's also useful for situations where either end could be using a programming language other than Monkey. This is something 'regal.networking' does not implicitly cover, as it deals with its own protocol behavior above the internet transport layer.
