@@ -71,6 +71,11 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	
 	' Methods (Public):
 	
+	' Abstract:
+	Method Accept:Bool() Abstract
+	
+	' Implemented:
+	
 	' These messages send 'P' directly to 'S'.
 	' These overloads are protocol specific,
 	' and as such, are not future-proof at all:

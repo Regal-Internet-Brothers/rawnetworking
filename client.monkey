@@ -106,6 +106,10 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 		Return False
 	End
 	
+	Method Accept:Bool()
+		Return AcceptMessages()
+	End
+	
 	Method Send:Int(P:Packet)
 		Return RawSendPacketTo(Connection, P)
 	End
@@ -148,7 +152,7 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 		
 		If (Success) Then
 			If (Response) Then
-				AcceptMessages()
+				Accept()
 			Endif
 		Else
 			Close()
