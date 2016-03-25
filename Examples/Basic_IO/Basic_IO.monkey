@@ -75,7 +75,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 		
 		If (KeyHit(KEY_F1)) Then
 			' Start our server.
-			Host = New Server(PORT, Self) ' Server.PORT_AUTO
+			Host = New Server(PORT, Self, PROTOCOL) ' Server.PORT_AUTO
 			
 			OpeningServer = True
 		Elseif (Host <> Null And Host.IsOpen) Then
@@ -163,7 +163,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	End
 	
 	Method AddClient:Client()
-		Local C:= New Client(ADDRESS, Host.Port, Self)
+		Local C:= New Client(ADDRESS, Host.Port, Self, PROTOCOL)
 		
 		Clients.AddLast(C)
 		
@@ -179,6 +179,22 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	End
 	
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		If (Host.Protocol = TRANSPORT_PROTOCOL_UDP) Then
+			Local Response:Bool = False
+			
+			For Local U:= Eachin Users
+				If (U.Equals(From)) Then
+					Response = True
+					
+					Exit
+				Endif
+			Next
+			
+			If (Not Response) Then
+				OnServerUserAccepted(Host, From)
+			Endif
+		Endif
+		
 		Print("Message received. (" + Length + " bytes)")
 		
 		Local Message:= Data.ReadLine()
@@ -203,7 +219,7 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 			If (User.Equals(LocalUser)) Then
 				Users.RemoveEach(LocalUser)
 				
-				LocalHandle.Free()
+				LocalUser.Free()
 				
 				Exit
 			Endif
