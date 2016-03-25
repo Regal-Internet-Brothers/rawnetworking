@@ -199,6 +199,8 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 			If (User.Equals(LocalUser)) Then
 				Users.RemoveEach(LocalUser)
 				
+				LocalHandle.Free()
+				
 				Exit
 			Endif
 		Next

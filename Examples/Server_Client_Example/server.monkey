@@ -138,6 +138,8 @@ Class ServerExample Extends App Implements ServerApplication
 						be automatically released when appropriate.
 					#End
 					
+					DebugStop()
+					
 					Connection.SendAsync(P, U)
 				Next
 			Else
@@ -216,6 +218,22 @@ Class ServerExample Extends App Implements ServerApplication
 	
 	' This is called when a new message is received.
 	Method OnPacketReceived:Void(Data:Packet, Length:Int, From:NetworkUser)
+		If (Connection.Protocol = TRANSPORT_PROTOCOL_UDP) Then
+			Local Response:Bool = False
+			
+			For Local U:= Eachin Users
+				If (U.Equals(From)) Then
+					Response = True
+					
+					Exit
+				Endif
+			Next
+			
+			If (Not Response) Then
+				OnServerUserAccepted(Connection, From)
+			Endif
+		Endif
+		
 		Print("Received a message from a client (" + From.Address.ToString() + ") {" + Length + "}:")
 		
 		If (Not EndOfPacket(Data, Length)) Then
@@ -246,6 +264,8 @@ Class ServerExample Extends App Implements ServerApplication
 		For Local LocalHandle:= Eachin Users
 			If (User.Equals(LocalHandle)) Then
 				Users.RemoveEach(LocalHandle)
+				
+				LocalHandle.Free()
 				
 				Exit
 			Endif
