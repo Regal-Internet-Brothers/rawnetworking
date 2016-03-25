@@ -28,6 +28,10 @@ Class Application Extends App Implements ServerApplication, ClientApplication Fi
 	' This is also what we when our clients are connecting.
 	Const PORT:= Server.PORT_AUTO ' 5029
 	
+	' This describes the protocol used to transport data.
+	' This must be the same on both the server and clients' ends.
+	Const PROTOCOL:= TRANSPORT_PROTOCOL_UDP ' TRANSPORT_PROTOCOL_TCP
+	
 	' Constructor(s):
 	Method OnCreate:Int()
 		' Set the application's update-rate.
