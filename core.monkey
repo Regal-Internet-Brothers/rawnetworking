@@ -16,6 +16,13 @@ Import brl.databuffer
 
 Public
 
+' Aliases:
+Alias ProtocolType = Int
+
+' Constant variable(s):
+Const TRANSPORT_PROTOCOL_TCP:ProtocolType = 0
+Const TRANSPORT_PROTOCOL_UDP:ProtocolType = 1
+
 ' Interfaces:
 Interface NetApplication
 	' Methods:
@@ -113,12 +120,12 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	End
 	
 	' This represents 'S' using a 'NetworkUser' object.
-	Method Represent:NetworkUser(S:Socket, ClosureRights:Bool=True)
+	Method Represent:NetworkUser(S:Socket, ClosureRights:Bool) ' True
 		' Not very efficient, but it works for now.
 		Return New NetworkUser(S, S.RemoteAddress, ClosureRights)
 	End
 	
-	Method Represent:NetworkUser(S:Socket, Address:SocketAddress, ClosureRights:Bool=True)
+	Method Represent:NetworkUser(S:Socket, Address:SocketAddress, ClosureRights:Bool) ' True
 		' Once again, not very efficient, but it works for now.
 		Return New NetworkUser(S, Address, ClosureRights)
 	End
@@ -179,7 +186,7 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	
 	Method IsTCPSocket:Bool() Property
 		' UDP is not currently supported.
-		Return True
+		Return (Protocol = TRANSPORT_PROTOCOL_TCP)
 	End
 	
 	' Properties (Protected):

@@ -32,7 +32,7 @@ Class Client Extends NetworkManager<ClientApplication> Implements IOnConnectComp
 	' Constructor(s):
 	
 	' This overload automatically calls 'Begin'.
-	Method New(Hostname:String, Port:Int, Parent:ClientApplication, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
+	Method New(Hostname:String, Port:Int, Parent:ClientApplication, Protocol:ProtocolType=TRANSPORT_PROTOCOL_TCP, PacketSize:Int=Default_PacketSize, PacketPoolSize:Int=Defaulk_PacketPoolSize)
 		Super.New(Parent, PacketSize, PacketPoolSize)
 		
 		Begin(Hostname, Port)

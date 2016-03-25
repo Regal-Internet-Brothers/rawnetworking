@@ -26,6 +26,9 @@ Class ServerExample Extends App Implements ServerApplication
 	' as long as any clients connect using the same port.
 	Const PORT:Int = 27015
 	
+	' This describes the protocol used to transport data.
+	Const PROTOCOL:= TRANSPORT_PROTOCOL_UDP ' TRANSPORT_PROTOCOL_TCP
+	
 	' Enable this if you want to use asynchronous sending.
 	Const USE_ASYNC_SEND:Bool = True ' False
 	
@@ -82,7 +85,7 @@ Class ServerExample Extends App Implements ServerApplication
 				Print("Hosting a server on port: " + PORT)
 				
 				' Attempt to host using the port described by 'PORT' (Found above).
-				Connection = New Server(PORT, Self)
+				Connection = New Server(PORT, Self, PROTOCOL)
 				
 				' From here, we wait until the appropriate callback is activated.
 			Endif
