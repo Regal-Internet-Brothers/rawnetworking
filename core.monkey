@@ -39,7 +39,7 @@ End
 ' Classes:
 
 ' This class covers common functionality between 'Server' and 'Client'.
-Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete Abstract
+Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete, IOnSendToComplete Abstract
 	' Constant variable(s):
 	Const PORT_AUTO:= 0
 	
@@ -75,8 +75,9 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	' These overloads are protocol specific,
 	' and as such, are not future-proof at all:
 	
-	' The return-value of this method indicates
-	' the underlying 'Socket.Send' method's result.
+	' The return-value of these methods indicate the underlying
+	' 'Socket.Send' and 'Socket.SendTo' methods' results:
+	
 	Method RawSendPacketTo:Int(S:Socket, P:Packet)
 		' Since we're not using asynchronous behavior,
 		' we don't need to mark this 'Packet' object.
@@ -89,6 +90,23 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		
 		' Send 'P' to 'S' asynchronously.
 		S.SendAsync(P.Data, P.Offset, P.Position, Self) ' 'P.Length'
+		
+		Return
+	End
+	
+	' These overloads are specific to UDP:
+	Method RawSendPacketTo:Int(S:Socket, Addr:SocketAddress, P:Packet)
+		' Since we're not using asynchronous behavior,
+		' we don't need to mark this 'Packet' object.
+		Return S.SendTo(P.Data, P.Offset, P.Position, Addr) ' 'P.Length'
+	End
+	
+	Method RawSendPacketToAsync:Void(S:Socket, P:Packet, Addr:SocketAddress)
+		' Mark 'P', so we can take care of it later.
+		MarkTransmission(P)
+		
+		' Send 'P' to 'Addr' using 'S' asynchronously.
+		S.SendToAsync(P.Data, P.Offset, P.Position, Addr, Self) ' 'P.Length'
 		
 		Return
 	End
@@ -132,6 +150,18 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	
 	' BRL:
 	Method OnSendComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Source:Socket)
+		If (Source <> Connection) Then
+			Return
+		Endif
+		
+		' Kill the transmission; finish the transmission, and if
+		' successful, give the associated 'Packet' object back.
+		KillTransmission(Data, False)
+		
+		Return
+	End
+	
+	Method OnSendToComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Addr:SocketAddress, Source:Socket)
 		If (Source <> Connection) Then
 			Return
 		Endif
