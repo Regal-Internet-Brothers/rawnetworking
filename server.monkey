@@ -19,6 +19,7 @@ Interface ServerApplication Extends NetApplication
 	' Methods:
 	
 	' The return-value of this method indicates if the server should start accepting "clients" ('NetworkUsers').
+	' In the case of connectionless sockets, this will start accepting "messages" ('Packets'). (See 'Accept')
 	Method OnServerBound:Bool(Host:Server, Port:Int, Response:Bool)
 	
 	' This is called when a "user" disconnects from a 'Server'.
@@ -94,10 +95,16 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 	
 	#Rem
 		This is used to begin accepting "clients" ('NetworkUsers').
-		The return-value of this method indicates if we could start accepting clients again.
+		
+		The return-value of this method indicates if we started accepting "clients".
 		If we are already accepting "clients", this will return 'False'.
 		
 		Usage of this method is not safe unless 'IsOpen' is 'True'.
+		
+		This method will implicitly fail when
+		using connectionless protocols like UDP.
+		
+		To remain protocol neutral, please use 'Accept'.
 	#End
 	
 	Method AcceptClients:Bool(Force:Bool=False)
@@ -115,6 +122,51 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 		End Select
 		
 		' Return the default response.
+		Return False
+	End
+	
+	#Rem
+		This is used to begin accepting "messages" ('Packets').
+		
+		The return-value of this method indicates if started accepting "messages".
+		If we are already accepting "messages", this will return 'False'.
+		
+		Usage of this method is not safe unless 'IsOpen' is 'True'.
+		
+		This method will implicitly fail when
+		using connection-based protocols like TCP.
+		
+		To remain protocol neutral, please use 'Accept'.
+	#End
+	
+	Method AcceptMessages:Bool(Force:Bool=False)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_UDP
+				If (Accepting And Not Force) Then
+					Return False
+				Endif
+				
+				AcceptMessagesWith(Connection)
+				
+				Accepting = True
+				
+				Return True ' Accepting
+		End Select
+		
+		' Return the default response.
+		Return False
+	End
+	
+	' This automatically calls the protocol's default acceptance routine.
+	' For example when using TCP, this will call 'AcceptClients'.
+	Method Accept:Bool(Force:Bool=False)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				AcceptClients(Force)
+			Case TRANSPORT_PROTOCOL_UDP
+				AcceptMessages(Force)
+		End Select
+		
 		Return False
 	End
 	
@@ -178,10 +230,9 @@ Class Server Extends NetworkManager<ServerApplication> Implements IOnBindComplet
 			Return
 		Endif
 		
-		' Check if our parent wants us to accept "clients" initially.
+		' Check if our parent wants us to "accepting".
 		If (Response) Then
-			' They said yes, start accepting.
-			AcceptClients()
+			Accept()
 		Endif
 	End
 	

@@ -39,7 +39,7 @@ End
 ' Classes:
 
 ' This class covers common functionality between 'Server' and 'Client'.
-Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete, IOnSendToComplete Abstract
+Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplete, IOnReceiveComplete, IOnSendToComplete, IOnReceiveFromComplete Abstract
 	' Constant variable(s):
 	Const PORT_AUTO:= 0
 	
@@ -124,14 +124,23 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	
 	' If the 'MarkPacket' argument is set to 'False',
 	' this method may provide undefined behavior.
-	Method AcceptMessagesWith:Bool(S:Socket, P:Packet, MarkPacket:Bool=True)
+	Method AcceptMessagesWith:Bool(S:Socket, P:Packet, MarkPacket:Bool=True, Addr:SocketAddress=Null)
 		If (MarkPacket) Then
 			MarkTransmission(P)
 		Endif
 		
 		P.Reset()
 		
-		S.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
+		Select Protocol
+			Case TRANSPORT_PROTOCOL_TCP
+				S.ReceiveAsync(P.Data, P.Offset, P.Length, Self)
+			Case TRANSPORT_PROTOCOL_UDP
+				If (Addr = Null) Then
+					Addr = New SocketAddress()
+				Endif
+				
+				S.ReceiveFromAsync(P.Data, P.Offset, P.Length, Addr, Self)
+		End Select
 		
 		' Return the default response.
 		Return True
@@ -199,6 +208,33 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		Return
 	End
 	
+	'Method OnReceiveFromComplete : Void ( data:DataBuffer, offset:Int, count:Int, address:SocketAddress, source:Socket )
+	Method OnReceiveFromComplete:Void(Data:DataBuffer, Offset:Int, Count:Int, Addr:SocketAddress, Source:Socket)
+		If (IsOpen) Then
+			Local P:= GetTransmission(Data, False)
+			
+			If (P <> Null) Then
+				If (Count > 0) Then
+					Parent.OnPacketReceived(P, Count, Represent(Source, Addr, False)) ' IsTCPSocket
+					
+					' Start receiving again. (Do not mark this packet again)
+					AcceptMessagesWith(Source, P, False, Addr)
+				Else
+					OnDisconnectMessage(Source)
+				Endif
+			Else
+				Parent.OnUnknownPacket(Data, Offset, Count)
+			Endif
+		Else
+			' Kill the transmission, and if we don't
+			' recognize the enclosed data, throw it out.
+			' This behavior may change in the future.
+			KillTransmission(Data, True)
+		Endif
+		
+		Return
+	End
+	
 	Public
 	
 	' Properties (Public):
@@ -219,8 +255,11 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	End
 	
 	Method IsTCPSocket:Bool() Property
-		' UDP is not currently supported.
 		Return (Protocol = TRANSPORT_PROTOCOL_TCP)
+	End
+	
+	Method IsUDPSocket:Bool() Property
+		Return (Protocol = TRANSPORT_PROTOCOL_UDP)
 	End
 	
 	' Properties (Protected):
