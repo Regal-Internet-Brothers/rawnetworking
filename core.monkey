@@ -17,7 +17,7 @@ Import brl.databuffer
 Public
 
 ' Aliases:
-Alias ProtocolType = Int
+Alias ProtocolType = Int ' Byte
 
 ' Constant variable(s):
 Const TRANSPORT_PROTOCOL_TCP:ProtocolType = 0
@@ -180,6 +180,10 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		Return Self._Connection
 	End
 	
+	Method Protocol:ProtocolType() Property
+		Return Self._Protocol
+	End
+	
 	Method IsOpen:Bool() Property
 		Return (Connection <> Null)
 	End
@@ -204,6 +208,12 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 		Return
 	End
 	
+	Method Protocol:Void(Input:ProtocolType) Property
+		Self._Protocol = Input
+		
+		Return
+	End
+	
 	Public
 	
 	' Fields (Protected):
@@ -219,6 +229,8 @@ Class NetworkManager<ParentType> Extends PacketManager Implements IOnSendComplet
 	
 	' Meta:
 	Field _Port:Int = PORT_AUTO
+	
+	Field _Protocol:ProtocolType
 	
 	Public
 End
